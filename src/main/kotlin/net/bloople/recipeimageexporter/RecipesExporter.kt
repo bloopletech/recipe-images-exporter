@@ -1,5 +1,6 @@
 package net.bloople.recipeimageexporter
 
+import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
 import net.minecraft.recipe.RecipeManager
 import net.minecraft.recipe.RecipeType
 import net.minecraft.resource.ResourceManager
@@ -55,5 +56,20 @@ class RecipesExporter(private val recipeManager: RecipeManager, private val reso
             SmithingRecipeExporter(recipeInfo, exportDir).export()
         }
 
+        val uniqueItems = listOf(
+            craftingRecipeInfos,
+            smeltingRecipeInfos,
+            blastingRecipeInfos,
+            smokingRecipeInfos,
+            campfireCookingRecipeInfos,
+            stonecuttingRecipeInfos,
+            smithingRecipeInfos
+        ).flatten().flatMap { it.items }.distinct()
+
+        LOGGER.info("=============")
+        LOGGER.info("Unique Items:")
+        uniqueItems.forEach { LOGGER.info(it.identifier.toString()) }
+
+        LOGGER.info("End of export!")
     }
 }

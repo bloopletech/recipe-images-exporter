@@ -1,16 +1,15 @@
 package net.bloople.recipeimageexporter
 
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.recipe.BlastingRecipe
-import net.minecraft.recipe.CampfireCookingRecipe
-import net.minecraft.recipe.CraftingRecipe
-import net.minecraft.recipe.SmeltingRecipe
-import net.minecraft.recipe.SmithingRecipe
-import net.minecraft.recipe.SmokingRecipe
-import net.minecraft.recipe.StonecuttingRecipe
+
+interface RecipeInfo {
+    val recipeBasePath: String
+    val items: List<Item>
+}
 
 data class CraftingRecipeInfo(
-    val recipe: CraftingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slot1: ItemStack?,
     val slot2: ItemStack?,
@@ -22,47 +21,81 @@ data class CraftingRecipeInfo(
     val slot8: ItemStack?,
     val slot9: ItemStack?,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() {
+            return arrayOf(
+                slot1,
+                slot2,
+                slot3,
+                slot4,
+                slot5,
+                slot6,
+                slot7,
+                slot8,
+                slot9,
+                output
+            ).filterNotNull().map { it.item }.distinct()
+        }
+}
 
 data class StonecuttingRecipeInfo(
-    val recipe: StonecuttingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() = listOf(slot, output).map { it.item }.distinct()
+}
 
 data class SmeltingRecipeInfo(
-    val recipe: SmeltingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() = listOf(slot, output).map { it.item }.distinct()
+}
 
 data class BlastingRecipeInfo(
-    val recipe: BlastingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() = listOf(slot, output).map { it.item }.distinct()
+}
 
 data class SmokingRecipeInfo(
-    val recipe: SmokingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() = listOf(slot, output).map { it.item }.distinct()
+}
 
 data class CampfireCookingRecipeInfo(
-    val recipe: CampfireCookingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() = listOf(slot, output).map { it.item }.distinct()
+}
 
 data class SmithingRecipeInfo(
-    val recipe: SmithingRecipe,
+    override val recipeBasePath: String,
     val recipePath: String,
     val slotBase: ItemStack,
     val slotAddition: ItemStack,
     val output: ItemStack
-)
+) : RecipeInfo {
+    override val items: List<Item>
+        get() = listOf(slotBase, slotAddition, output).map { it.item }.distinct()
+}
