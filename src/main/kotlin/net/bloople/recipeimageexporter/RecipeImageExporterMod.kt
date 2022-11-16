@@ -42,11 +42,8 @@ object RecipeImageExporterMod: ClientModInitializer {
     }
 
     private fun export(client: MinecraftClient) {
-        for(recipe in client.world!!.recipeManager.values()) {
-            LOGGER.info("recipe: ${recipe.id}")
-        }
-
+        RecipesExporter(client.world!!.recipeManager, client.resourceManager).export()
     }
 
-    private val LOGGER: Logger = getLogger(this::class)
+    val LOGGER: Logger = getLogger(this::class)
 }
