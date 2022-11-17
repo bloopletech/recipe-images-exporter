@@ -7,7 +7,11 @@ import net.minecraft.recipe.RecipeType
 
 interface RecipeInfo {
     val recipeBasePath: String
+    val itemStacks: List<ItemStack>
     val items: List<Item>
+        get() {
+            return itemStacks.map { it.item }.distinct()
+        }
 }
 
 data class CraftingRecipeInfo(
@@ -24,7 +28,7 @@ data class CraftingRecipeInfo(
     val slot9: ItemStack?,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
+    override val itemStacks: List<ItemStack>
         get() {
             return arrayOf(
                 slot1,
@@ -37,7 +41,7 @@ data class CraftingRecipeInfo(
                 slot8,
                 slot9,
                 output
-            ).filterNotNull().map { it.item }.distinct()
+            ).filterNotNull().distinct()
         }
 }
 
@@ -47,8 +51,8 @@ data class StonecuttingRecipeInfo(
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
-        get() = listOf(slot, output).map { it.item }.distinct()
+    override val itemStacks: List<ItemStack>
+        get() = listOf(slot, output).distinct()
 }
 
 data class SmeltingRecipeInfo(
@@ -57,8 +61,8 @@ data class SmeltingRecipeInfo(
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
-        get() = listOf(slot, output).map { it.item }.distinct()
+    override val itemStacks: List<ItemStack>
+        get() = listOf(slot, output).distinct()
 }
 
 data class BlastingRecipeInfo(
@@ -67,8 +71,8 @@ data class BlastingRecipeInfo(
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
-        get() = listOf(slot, output).map { it.item }.distinct()
+    override val itemStacks: List<ItemStack>
+        get() = listOf(slot, output).distinct()
 }
 
 data class SmokingRecipeInfo(
@@ -77,8 +81,8 @@ data class SmokingRecipeInfo(
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
-        get() = listOf(slot, output).map { it.item }.distinct()
+    override val itemStacks: List<ItemStack>
+        get() = listOf(slot, output).distinct()
 }
 
 data class CampfireCookingRecipeInfo(
@@ -87,8 +91,8 @@ data class CampfireCookingRecipeInfo(
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
-        get() = listOf(slot, output).map { it.item }.distinct()
+    override val itemStacks: List<ItemStack>
+        get() = listOf(slot, output).distinct()
 }
 
 data class SmithingRecipeInfo(
@@ -98,8 +102,8 @@ data class SmithingRecipeInfo(
     val slotAddition: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
-    override val items: List<Item>
-        get() = listOf(slotBase, slotAddition, output).map { it.item }.distinct()
+    override val itemStacks: List<ItemStack>
+        get() = listOf(slotBase, slotAddition, output).distinct()
 }
 
 class RecipeInfos(recipeManager: RecipeManager) {
@@ -118,7 +122,7 @@ class RecipeInfos(recipeManager: RecipeManager) {
     val smithingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMITHING)
         .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmithingRecipe(it) }
 
-    val uniqueItems = listOf(
+    val uniqueItemStacks = listOf(
         craftingRecipeInfos,
         smeltingRecipeInfos,
         blastingRecipeInfos,
@@ -126,5 +130,5 @@ class RecipeInfos(recipeManager: RecipeManager) {
         campfireCookingRecipeInfos,
         stonecuttingRecipeInfos,
         smithingRecipeInfos
-    ).flatten().flatMap { it.items }.distinct()
+    ).flatten().flatMap { it.itemStacks }.distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
 }

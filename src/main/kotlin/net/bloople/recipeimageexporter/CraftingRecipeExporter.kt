@@ -1,48 +1,48 @@
 package net.bloople.recipeimageexporter;
 
 import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
+import net.minecraft.item.ItemStack
+import java.awt.image.BufferedImage
 import java.nio.file.Files
-import java.nio.file.Path
+import javax.imageio.ImageIO
 
 
 class CraftingRecipeExporter(
     private val recipeInfo: CraftingRecipeInfo,
-    private val exportDir: Path
+    private val recipesExporter: RecipesExporter
 ) : Exporter {
     override fun export() {
         LOGGER.info("exporting ${recipeInfo.recipePath}")
-        val recipeFilePath = exportDir.resolve("${recipeInfo.recipePath}.txt")
+        val recipeFilePath = recipesExporter.exportDir.resolve("${recipeInfo.recipePath}.png")
         Files.createDirectories(recipeFilePath.parent)
 
-        Files.newBufferedWriter(recipeFilePath).use {
-            if(recipeInfo.slot1 == null) it.appendLine("slot 1: empty")
-            else it.appendLine("slot 1: ${recipeInfo.slot1.count} ${recipeInfo.slot1.item.identifier}")
+        val image = ImageIO.read(decodeBase64(craftingRecipeImage)).asARGB()
 
-            if(recipeInfo.slot2 == null) it.appendLine("slot 2: empty")
-            else it.appendLine("slot 2: ${recipeInfo.slot2.count} ${recipeInfo.slot2.item.identifier}")
-
-            if(recipeInfo.slot3 == null) it.appendLine("slot 3: empty")
-            else it.appendLine("slot 3: ${recipeInfo.slot3.count} ${recipeInfo.slot3.item.identifier}")
-
-            if(recipeInfo.slot4 == null) it.appendLine("slot 4: empty")
-            else it.appendLine("slot 4: ${recipeInfo.slot4.count} ${recipeInfo.slot4.item.identifier}")
-
-            if(recipeInfo.slot5 == null) it.appendLine("slot 5: empty")
-            else it.appendLine("slot 5: ${recipeInfo.slot5.count} ${recipeInfo.slot5.item.identifier}")
-
-            if(recipeInfo.slot6 == null) it.appendLine("slot 6: empty")
-            else it.appendLine("slot 6: ${recipeInfo.slot6.count} ${recipeInfo.slot6.item.identifier}")
-
-            if(recipeInfo.slot7 == null) it.appendLine("slot 7: empty")
-            else it.appendLine("slot 7: ${recipeInfo.slot7.count} ${recipeInfo.slot7.item.identifier}")
-
-            if(recipeInfo.slot8 == null) it.appendLine("slot 8: empty")
-            else it.appendLine("slot 8: ${recipeInfo.slot8.count} ${recipeInfo.slot8.item.identifier}")
-
-            if(recipeInfo.slot9 == null) it.appendLine("slot 9: empty")
-            else it.appendLine("slot 9: ${recipeInfo.slot9.count} ${recipeInfo.slot9.item.identifier}")
-
-            it.appendLine("output slot: ${recipeInfo.output.count} ${recipeInfo.output.item.identifier}")
+        image.createGraphics().use {
+            if(recipeInfo.slot1 != null) drawImage(slotImage(recipeInfo.slot1), 11, 11, null)
+            if(recipeInfo.slot2 != null) drawImage(slotImage(recipeInfo.slot2), 47, 11, null)
+            if(recipeInfo.slot3 != null) drawImage(slotImage(recipeInfo.slot3), 83, 11, null)
+            if(recipeInfo.slot4 != null) drawImage(slotImage(recipeInfo.slot4), 11, 47, null)
+            if(recipeInfo.slot5 != null) drawImage(slotImage(recipeInfo.slot5), 47, 47, null)
+            if(recipeInfo.slot6 != null) drawImage(slotImage(recipeInfo.slot6), 83, 47, null)
+            if(recipeInfo.slot7 != null) drawImage(slotImage(recipeInfo.slot7), 11, 83, null)
+            if(recipeInfo.slot8 != null) drawImage(slotImage(recipeInfo.slot8), 47, 83, null)
+            if(recipeInfo.slot9 != null) drawImage(slotImage(recipeInfo.slot9), 83, 83, null)
+            drawImage(outputImage(recipeInfo.output), 166, 46, null)
         }
+
+        ImageIO.write(image, "PNG", recipeFilePath.toFile())
+    }
+
+    private fun slotImage(itemStack: ItemStack): BufferedImage {
+        return recipesExporter.getIcon(itemStack).scaleImage(30, 30)
+    }
+
+    private fun outputImage(itemStack: ItemStack): BufferedImage {
+        return recipesExporter.getIcon(itemStack)
+    }
+
+    companion object {
+        const val craftingRecipeImage = "iVBORw0KGgoAAAANSUhEUgAAANgAAAB8BAMAAAD5g2MmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAVUExURdvb25ubm1tbW8bGxjc3N4uLi////9MBu0EAAAAJcEhZcwAADsIAAA7CARUoSoAAAAC7SURBVGje7dexDcUgDEVRskJGYAWvkBW8AvuP8JtfRKAECmTBy72lKU4RiOQU2BGJnSlZWBkMrI9ddT4y2QLzqjIyAQMDAwMDAwMDAwOru57y7TF/qIDNxbzUjUx2wOatucthzRFX/5/rYq6LuS7mupgrYdVEF3NZTOib6b6zb/wbTRUzVcxUMQMzdmp26h7WHHH1v4O1D+T2ULbGXgMDAwMDAwMDAwNbFJu35q6GBQUG1sGOHFc6w6icf+mb4aZ8jxexAAAAAElFTkSuQmCC"
     }
 }

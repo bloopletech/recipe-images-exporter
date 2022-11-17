@@ -1,28 +1,75 @@
 package net.bloople.recipeimageexporter
 
 import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
+import net.minecraft.client.font.TextRenderer
+import net.minecraft.client.render.item.ItemRenderer
+import net.minecraft.item.ItemStack
 import net.minecraft.recipe.RecipeManager
-import net.minecraft.resource.ResourceManager
+import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Path
+import javax.imageio.ImageIO
+import kotlin.math.ceil
+import kotlin.math.sqrt
 
-class RecipesExporter(recipeManager: RecipeManager, private val resourceManager: ResourceManager) {
+
+class RecipesExporter(
+    recipeManager: RecipeManager,
+    private val itemRenderer: ItemRenderer,
+    private val textRenderer: TextRenderer
+) {
     private val recipeInfos = RecipeInfos(recipeManager)
+    private val iconsStride = ceil(sqrt(recipeInfos.uniqueItemStacks.size.toDouble())).toInt()
 
-    fun export() {
-        val curDir = Path.of("").toAbsolutePath();
-        val exportDir = curDir.resolve("recipe-image-exporter")
+    val exportDir = Path.of("").toAbsolutePath().resolve("recipe-image-exporter")
+    private val iconsPath = exportDir.resolve("icons.png")
+
+    lateinit var iconsImage: BufferedImage
+
+    init {
         exportDir.toFile().deleteRecursively()
         Files.createDirectories(exportDir)
+    }
 
-        LOGGER.info("=============")
-        LOGGER.info("Unique Items:")
-        recipeInfos.uniqueItems.forEach { LOGGER.info(it.identifier.toString()) }
+    fun createIcons() {
+        val width = iconsStride * 34
+        val height = iconsStride * 34
+        val scaledWidth = iconsStride * 17
 
-        LOGGER.info("End of export!")
+        val nativeImage = renderToTexture(width, height, 0.5451f, 0.5451f, 0.5451f, 2.0) {
+            var x = 0
+            var y = 0
+            for(itemStack in recipeInfos.uniqueItemStacks) {
+                itemRenderer.renderInGui(itemStack, x, y)
+                itemRenderer.renderGuiItemOverlay(textRenderer, itemStack, x, y)
+
+                x += 17
+                if(x >= scaledWidth) {
+                    x = 0
+                    y += 17
+                }
+            }
+        }
+
+        nativeImage.use { it.writeTo(iconsPath.toFile()) }
+    }
+
+    fun getIcon(itemStack: ItemStack): BufferedImage {
+        val index = recipeInfos.uniqueItemStacks.indexOfFirst { ItemStack.areEqual(it, itemStack) }
+        val x = (index % iconsStride) * 34
+        val y = (index / iconsStride) * 34
+
+        return BufferedImage(34, 34, BufferedImage.TYPE_INT_ARGB).apply {
+            raster.setRect(0, 0, iconsImage.getData(x, y, width, height))
+        }
+    }
+
+    fun export() {
+        createIcons()
+        iconsImage = ImageIO.read(iconsPath.toFile()).asARGB()
 
         for(recipeInfo in recipeInfos.craftingRecipeInfos) {
-            CraftingRecipeExporter(recipeInfo, exportDir).export()
+            CraftingRecipeExporter(recipeInfo, this).export()
         }
 
 //        for(recipeInfo in smeltingRecipeInfos) {

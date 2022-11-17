@@ -42,7 +42,7 @@ object RecipeImageExporterMod: ClientModInitializer {
     }
 
     private fun export(client: MinecraftClient) {
-        RecipesExporter(client.world!!.recipeManager, client.resourceManager).export()
+        RecipesExporter(client.world!!.recipeManager, client.itemRenderer, client.textRenderer).export()
     }
 
     val LOGGER: Logger = getLogger(this::class)
