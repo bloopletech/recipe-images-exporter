@@ -2,6 +2,8 @@ package net.bloople.recipeimageexporter
 
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.recipe.RecipeManager
+import net.minecraft.recipe.RecipeType
 
 interface RecipeInfo {
     val recipeBasePath: String
@@ -98,4 +100,31 @@ data class SmithingRecipeInfo(
 ) : RecipeInfo {
     override val items: List<Item>
         get() = listOf(slotBase, slotAddition, output).map { it.item }.distinct()
+}
+
+class RecipeInfos(recipeManager: RecipeManager) {
+    val craftingRecipeInfos = recipeManager.listAllOfType(RecipeType.CRAFTING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertCraftingRecipe(it) }
+    val smeltingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMELTING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmeltingRecipe(it) }
+    val blastingRecipeInfos = recipeManager.listAllOfType(RecipeType.BLASTING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertBlastingRecipe(it) }
+    val smokingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMOKING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmokingRecipe(it) }
+    val campfireCookingRecipeInfos = recipeManager.listAllOfType(RecipeType.CAMPFIRE_COOKING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertCampfireCookingRecipe(it) }
+    val stonecuttingRecipeInfos = recipeManager.listAllOfType(RecipeType.STONECUTTING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertStonecuttingRecipe(it) }
+    val smithingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMITHING)
+        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmithingRecipe(it) }
+
+    val uniqueItems = listOf(
+        craftingRecipeInfos,
+        smeltingRecipeInfos,
+        blastingRecipeInfos,
+        smokingRecipeInfos,
+        campfireCookingRecipeInfos,
+        stonecuttingRecipeInfos,
+        smithingRecipeInfos
+    ).flatten().flatMap { it.items }.distinct()
 }

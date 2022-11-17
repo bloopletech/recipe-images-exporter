@@ -1,6 +1,5 @@
 package net.bloople.recipeimageexporter
 
-import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.*
 
@@ -19,9 +18,6 @@ class CraftingRecipeAdapter(val slots: Array<Array<ItemStack>?> = arrayOfNulls(9
 }
 
 fun convertCraftingRecipe(recipe: CraftingRecipe): List<CraftingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "crafting/${recipe.id.namespace}/${recipe.id.path}"
 
     val ingredients = recipe.ingredients
@@ -56,9 +52,6 @@ fun convertCraftingRecipe(recipe: CraftingRecipe): List<CraftingRecipeInfo> {
 }
 
 fun convertSmeltingRecipe(recipe: SmeltingRecipe): List<SmeltingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "smelting/${recipe.id.namespace}/${recipe.id.path}"
 
     val ingredient = recipe.ingredients[0]
@@ -77,9 +70,6 @@ fun convertSmeltingRecipe(recipe: SmeltingRecipe): List<SmeltingRecipeInfo> {
 }
 
 fun convertBlastingRecipe(recipe: BlastingRecipe): List<BlastingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "blasting/${recipe.id.namespace}/${recipe.id.path}"
 
     val ingredient = recipe.ingredients[0]
@@ -98,9 +88,6 @@ fun convertBlastingRecipe(recipe: BlastingRecipe): List<BlastingRecipeInfo> {
 }
 
 fun convertSmokingRecipe(recipe: SmokingRecipe): List<SmokingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "smoking/${recipe.id.namespace}/${recipe.id.path}"
 
     val ingredient = recipe.ingredients[0]
@@ -119,9 +106,6 @@ fun convertSmokingRecipe(recipe: SmokingRecipe): List<SmokingRecipeInfo> {
 }
 
 fun convertCampfireCookingRecipe(recipe: CampfireCookingRecipe): List<CampfireCookingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "campfire_cooking/${recipe.id.namespace}/${recipe.id.path}"
 
     val ingredient = recipe.ingredients[0]
@@ -140,9 +124,6 @@ fun convertCampfireCookingRecipe(recipe: CampfireCookingRecipe): List<CampfireCo
 }
 
 fun convertStonecuttingRecipe(recipe: StonecuttingRecipe): List<StonecuttingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "stonecutting/${recipe.id.namespace}/${recipe.id.path}"
 
     val ingredient = recipe.ingredients[0]
@@ -161,9 +142,6 @@ fun convertStonecuttingRecipe(recipe: StonecuttingRecipe): List<StonecuttingReci
 }
 
 fun convertSmithingRecipe(recipe: SmithingRecipe): List<SmithingRecipeInfo> {
-    LOGGER.info("exporting ${recipe.id}")
-    if(recipe.isIgnoredInRecipeBook) return emptyList()
-
     val recipePath = "smithing/${recipe.id.namespace}/${recipe.id.path}"
 
     val base = recipe.javaClass.getDeclaredField("base").get(recipe) as Ingredient
