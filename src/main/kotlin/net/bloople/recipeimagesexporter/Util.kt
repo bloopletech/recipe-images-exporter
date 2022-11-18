@@ -1,4 +1,4 @@
-package net.bloople.recipeimageexporter
+package net.bloople.recipeimagesexporter
 
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
@@ -138,7 +138,7 @@ fun getLogger(clazz: KClass<*>): Logger {
     val fullName = if(clazz.isCompanion) clazz.java.declaringClass.name
     else clazz.qualifiedName
 
-    val name = fullName!!.removePrefix("net.bloople.recipeimageexporter.")
+    val name = fullName!!.removePrefix("net.bloople.recipeimagesexporter.")
 
     return getLogger(name)
 }

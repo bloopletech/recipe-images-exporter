@@ -1,4 +1,4 @@
-package net.bloople.recipeimageexporter
+package net.bloople.recipeimagesexporter
 
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack

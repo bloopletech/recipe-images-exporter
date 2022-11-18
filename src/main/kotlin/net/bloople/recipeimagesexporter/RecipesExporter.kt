@@ -1,6 +1,6 @@
-package net.bloople.recipeimageexporter
+package net.bloople.recipeimagesexporter
 
-import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
+import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.render.item.ItemRenderer
 import net.minecraft.item.ItemStack
@@ -21,7 +21,7 @@ class RecipesExporter(
     private val recipeInfos = RecipeInfos(recipeManager)
     private val iconsStride = ceil(sqrt(recipeInfos.uniqueItemStacks.size.toDouble())).toInt()
 
-    val exportDir = Path.of("").toAbsolutePath().resolve("recipe-image-exporter")
+    val exportDir = Path.of("").toAbsolutePath().resolve("recipe-images-exporter")
     private val iconsPath = exportDir.resolve("icons.png")
 
     lateinit var iconsImage: BufferedImage

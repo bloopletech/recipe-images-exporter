@@ -1,6 +1,6 @@
-package net.bloople.recipeimageexporter;
+package net.bloople.recipeimagesexporter;
 
-import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
+import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import java.nio.file.Files
 import java.nio.file.Path
 

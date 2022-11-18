@@ -1,4 +1,4 @@
-package net.bloople.recipeimageexporter
+package net.bloople.recipeimagesexporter
 
 import net.fabricmc.api.*
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
@@ -11,12 +11,12 @@ import org.lwjgl.glfw.GLFW
 import org.slf4j.Logger
 
 
-const val MOD_ID = "recipeimageexporter"
+const val MOD_ID = "recipeimagesexporter"
 const val MOD_NAME = "RecipeImageExporter"
 
 @Suppress("UNUSED")
 @EnvironmentInterface(value=EnvType.CLIENT, itf=ClientModInitializer::class)
-object RecipeImageExporterMod: ClientModInitializer {
+object RecipeImagesExporterMod: ClientModInitializer {
     private lateinit var keyBinding: KeyBinding
 
     @Environment(value=EnvType.CLIENT)

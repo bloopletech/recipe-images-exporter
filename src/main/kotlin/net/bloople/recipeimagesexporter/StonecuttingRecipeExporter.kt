@@ -1,12 +1,12 @@
-package net.bloople.recipeimageexporter;
+package net.bloople.recipeimagesexporter;
 
-import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
+import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import java.nio.file.Files
 import java.nio.file.Path
 
 
-class BlastingRecipeExporter(
-    private val recipeInfo: BlastingRecipeInfo,
+class StonecuttingRecipeExporter(
+    private val recipeInfo: StonecuttingRecipeInfo,
     private val exportDir: Path
 ) : Exporter {
     override fun export() {

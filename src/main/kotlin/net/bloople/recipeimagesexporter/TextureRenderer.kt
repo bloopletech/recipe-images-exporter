@@ -1,4 +1,4 @@
-package net.bloople.recipeimageexporter
+package net.bloople.recipeimagesexporter
 
 import com.mojang.blaze3d.platform.GlConst
 import com.mojang.blaze3d.systems.RenderSystem

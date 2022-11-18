@@ -1,6 +1,6 @@
-package net.bloople.recipeimageexporter;
+package net.bloople.recipeimagesexporter;
 
-import net.bloople.recipeimageexporter.RecipeImageExporterMod.LOGGER
+import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import net.minecraft.item.ItemStack
 import java.awt.image.BufferedImage
 import java.nio.file.Files
