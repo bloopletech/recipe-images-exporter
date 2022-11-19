@@ -12,7 +12,7 @@ import org.slf4j.Logger
 
 
 const val MOD_ID = "recipeimagesexporter"
-const val MOD_NAME = "RecipeImageExporter"
+const val MOD_NAME = "RecipeImagesExporter"
 
 @Suppress("UNUSED")
 @EnvironmentInterface(value=EnvType.CLIENT, itf=ClientModInitializer::class)
