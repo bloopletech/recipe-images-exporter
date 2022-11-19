@@ -122,7 +122,7 @@ class RecipeInfos(recipeManager: RecipeManager) {
     val smithingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMITHING)
         .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmithingRecipe(it) }
 
-    val uniqueItemStacks = listOf(
+    val allRecipeInfos = listOf(
         craftingRecipeInfos,
         smeltingRecipeInfos,
         blastingRecipeInfos,
@@ -130,5 +130,13 @@ class RecipeInfos(recipeManager: RecipeManager) {
         campfireCookingRecipeInfos,
         stonecuttingRecipeInfos,
         smithingRecipeInfos
-    ).flatten().flatMap { it.itemStacks }.distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
+    ).flatten()
+
+    val uniqueItems = allRecipeInfos.flatMap { it.items }.distinctBy { it.identifier }.sortedBy { it.identifier }
+
+    val uniqueItemStacks = allRecipeInfos.flatMap { it.itemStacks }.distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
+
+    val oneItemStacks =  uniqueItems.map { ItemStack(it, 1) }
+
+    val itemStacks = (uniqueItemStacks + oneItemStacks).distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
 }

@@ -3,15 +3,16 @@ package net.bloople.recipeimagesexporter
 import com.mojang.blaze3d.platform.GlConst
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient.IS_SYSTEM_MAC
+import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gui.widget.ClickableWidget
-import net.minecraft.client.render.BackgroundRenderer
-import net.minecraft.client.render.DiffuseLighting
-import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.*
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.text.Text
 import net.minecraft.util.math.Matrix4f
+
 
 fun renderToTexture(
     width: Int,
@@ -82,4 +83,25 @@ fun renderToTexture(
     finally {
         framebuffer.delete()
     }
+}
+
+fun renderText(textRenderer: TextRenderer, text: Text, x: Int, y: Int, color: Int) {
+    val matrixStack = MatrixStack()
+
+    matrixStack.translate(0.0, 0.0, 0.0)
+    val immediate = VertexConsumerProvider.immediate(Tessellator.getInstance().buffer)
+
+    textRenderer.draw(
+        text,
+        x.toFloat(),
+        y.toFloat(),
+        color,
+        false,
+        matrixStack.peek().positionMatrix,
+        immediate as VertexConsumerProvider,
+        false,
+        0,
+        LightmapTextureManager.MAX_LIGHT_COORDINATE
+    )
+    immediate.draw()
 }

@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.util.*
 import kotlin.math.PI
+import kotlin.math.ceil
 import kotlin.reflect.KClass
 
 fun <T> Array<out T>.getOrLast(index: Int): T? {
@@ -65,6 +66,19 @@ fun BufferedImage.scaleImage(w2: Int, h2: Int): BufferedImage {
     val scaley = h2 / height.toDouble()
     val after = BufferedImage(w2, h2, type)
     val scaleInstance = AffineTransform.getScaleInstance(scalex, scaley)
+    val scaleOp = AffineTransformOp(scaleInstance, AffineTransformOp.TYPE_BICUBIC)
+    scaleOp.filter(this, after)
+    return after
+}
+
+// Based on https://stackoverflow.com/a/46211880
+fun BufferedImage.scaleImage(h2: Int): BufferedImage {
+    // Create a new image of the proper size
+    val scaley = h2 / height.toDouble()
+    val w2 = ceil(width.toDouble() * scaley).toInt()
+
+    val after = BufferedImage(w2, h2, type)
+    val scaleInstance = AffineTransform.getScaleInstance(scaley, scaley)
     val scaleOp = AffineTransformOp(scaleInstance, AffineTransformOp.TYPE_BICUBIC)
     scaleOp.filter(this, after)
     return after
