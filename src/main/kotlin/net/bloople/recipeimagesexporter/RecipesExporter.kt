@@ -26,8 +26,9 @@ class RecipesExporter(
         itemLabelsExtractor.extract()
 
         val itemsData = ItemsData(
-            itemIconsExtractor.icons,
+            itemIconsExtractor.slotIcons,
             itemIconsExtractor.labelIcons,
+            itemIconsExtractor.transparentIcons,
             itemLabelsExtractor.labels,
             itemLabelsExtractor.widths
         )

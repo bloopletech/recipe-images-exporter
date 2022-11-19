@@ -8,6 +8,8 @@ import java.nio.file.Path
 import javax.imageio.ImageIO
 import kotlin.math.ceil
 import kotlin.math.sqrt
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 class ItemIconsExtractor(
     private val itemStacks: List<ItemStack>,
@@ -17,10 +19,16 @@ class ItemIconsExtractor(
 ) {
     private val iconsPath = exportDir.resolve("icons.png")
     private val labelIconsPath = exportDir.resolve("label-icons.png")
+    private val transparentIconsPath = exportDir.resolve("transparent-icons.png")
     private val iconsStride = ceil(sqrt(itemStacks.size.toDouble())).toInt()
+    private var maskColorRed = 0
+    private var maskColorGreen = 0
+    private var maskColorBlue = 0
+    private var maskColor = 0
 
-    lateinit var icons: Map<String, BufferedImage>
+    lateinit var slotIcons: Map<String, BufferedImage>
     lateinit var labelIcons: Map<String, BufferedImage>
+    lateinit var transparentIcons: Map<String, BufferedImage>
 
     private fun exportIcons(r: Float, g: Float, b: Float, path: Path) {
         val width = iconsStride * 34
@@ -45,6 +53,36 @@ class ItemIconsExtractor(
         nativeImage.use { it.writeTo(path.toFile()) }
     }
 
+    private fun findIconsMaskColor() {
+        val iconsImage = ImageIO.read(iconsPath.toFile()).asARGB()
+
+        val pixels = IntArray(iconsImage.width * iconsImage.height)
+        for(x in 0 until iconsImage.width) {
+            for(y in 0 until iconsImage.height) {
+                pixels[x * y] = iconsImage.getRGB(x, y)
+            }
+        }
+
+        maskColor = 0
+        while(true) {
+            maskColorRed = Random.nextUInt(256u).toInt()
+            maskColorGreen = Random.nextUInt(256u).toInt()
+            maskColorBlue = Random.nextUInt(256u).toInt()
+            maskColor = 0xFF shl 24 or (maskColorRed shl 16) or (maskColorGreen shl 8) or (maskColorBlue shl 0)
+            if(!pixels.contains(maskColor)) break
+        }
+    }
+
+    private fun applyMaskColor(image: BufferedImage) {
+        image.apply {
+            for(x in 0 until width) {
+                for(y in 0 until height) {
+                    if(getRGB(x, y) == maskColor) setRGB(x, y, 0)
+                }
+            }
+        }
+    }
+
     private fun importIcons(path: Path): Map<String, BufferedImage> {
         val iconsImage = ImageIO.read(path.toFile()).asARGB()
         val icons = HashMap<String, BufferedImage>()
@@ -66,11 +104,18 @@ class ItemIconsExtractor(
     fun exportIcons() {
         exportIcons(0.5451f, 0.5451f, 0.5451f, iconsPath)
         exportIcons(0.7765f, 0.7765f, 0.7765f, labelIconsPath)
+        findIconsMaskColor()
+        exportIcons(maskColorRed / 255.0f, maskColorGreen / 255.0f, maskColorBlue / 255.0f, transparentIconsPath)
     }
 
     fun importIcons() {
-        icons = importIcons(iconsPath)
+        slotIcons = importIcons(iconsPath)
         labelIcons = importIcons(labelIconsPath)
+
+        val unmaskedIconsImage = ImageIO.read(transparentIconsPath.toFile()).asARGB()
+        applyMaskColor(unmaskedIconsImage)
+        ImageIO.write(unmaskedIconsImage, "PNG", transparentIconsPath.toFile())
+        transparentIcons = importIcons(transparentIconsPath)
     }
 
     fun extract() {

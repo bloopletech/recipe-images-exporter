@@ -34,7 +34,7 @@ class StonecuttingRecipeExporter(
 
             createGraphics().use {
                 drawImage(itemsData.slotImage(recipeInfo.slot), 11, 47, null)
-                drawImage(itemsData.slotImage(recipeInfo.slot), 54, 22, null)
+                drawImage(itemsData.transparentSlotImage(recipeInfo.slot), 54, 22, null)
                 drawImage(itemsData.outputImage(recipeInfo.output), 119, 45, null)
 
                 val x = 8
