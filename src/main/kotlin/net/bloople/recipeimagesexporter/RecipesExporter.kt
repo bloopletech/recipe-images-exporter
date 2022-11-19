@@ -48,10 +48,10 @@ class RecipesExporter(
         for(recipeInfo in recipeInfos.smokingRecipeInfos) {
             SmokingRecipeExporter(recipeInfo, exportDir, itemsData).export()
         }
-//
-//        for(recipeInfo in campfireCookingRecipeInfos) {
-//            CampfireCookingRecipeExporter(recipeInfo, exportDir).export()
-//        }
+
+        for(recipeInfo in recipeInfos.campfireCookingRecipeInfos) {
+            CampfireCookingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+        }
 
         for(recipeInfo in recipeInfos.stonecuttingRecipeInfos) {
             StonecuttingRecipeExporter(recipeInfo, exportDir, itemsData).export()

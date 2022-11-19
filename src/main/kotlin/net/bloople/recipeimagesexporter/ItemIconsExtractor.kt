@@ -18,8 +18,8 @@ class ItemIconsExtractor(
     private val textRenderer: TextRenderer
 ) {
     private val iconsPath = exportDir.resolve("icons.png")
-    private val labelIconsPath = exportDir.resolve("label-icons.png")
-    private val transparentIconsPath = exportDir.resolve("transparent-icons.png")
+    private val labelIconsPath = exportDir.resolve("label_icons.png")
+    private val transparentIconsPath = exportDir.resolve("transparent_icons.png")
     private val iconsStride = ceil(sqrt(itemStacks.size.toDouble())).toInt()
     private var maskColorRed = 0
     private var maskColorGreen = 0
