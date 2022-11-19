@@ -36,28 +36,28 @@ class RecipesExporter(
             CraftingRecipeExporter(recipeInfo, exportDir, itemsData).export()
         }
 
-//        for(recipeInfo in smeltingRecipeInfos) {
-//            SmeltingRecipeExporter(recipeInfo, exportDir).export()
-//        }
-//
-//        for(recipeInfo in blastingRecipeInfos) {
-//            BlastingRecipeExporter(recipeInfo, exportDir).export()
-//        }
-//
-//        for(recipeInfo in smokingRecipeInfos) {
-//            SmokingRecipeExporter(recipeInfo, exportDir).export()
-//        }
+        for(recipeInfo in recipeInfos.smeltingRecipeInfos) {
+            SmeltingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+        }
+
+        for(recipeInfo in recipeInfos.blastingRecipeInfos) {
+            BlastingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+        }
+
+        for(recipeInfo in recipeInfos.smokingRecipeInfos) {
+            SmokingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+        }
 //
 //        for(recipeInfo in campfireCookingRecipeInfos) {
 //            CampfireCookingRecipeExporter(recipeInfo, exportDir).export()
 //        }
-//
-//        for(recipeInfo in stonecuttingRecipeInfos) {
-//            StonecuttingRecipeExporter(recipeInfo, exportDir).export()
-//        }
-//
-//        for(recipeInfo in smithingRecipeInfos) {
-//            SmithingRecipeExporter(recipeInfo, exportDir).export()
-//        }
+
+        for(recipeInfo in recipeInfos.stonecuttingRecipeInfos) {
+            StonecuttingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+        }
+
+        for(recipeInfo in recipeInfos.smithingRecipeInfos) {
+            SmithingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+        }
     }
 }
