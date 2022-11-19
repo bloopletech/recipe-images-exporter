@@ -3,17 +3,19 @@ package net.bloople.recipeimagesexporter
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.client.render.item.ItemRenderer
 import net.minecraft.recipe.RecipeManager
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 
 
 class RecipesExporter(
     recipeManager: RecipeManager,
+    runDir: File,
     private val itemRenderer: ItemRenderer,
     private val textRenderer: TextRenderer
 ) {
     private val recipeInfos = RecipeInfos(recipeManager)
-    private val exportDir: Path = Path.of("").toAbsolutePath().resolve("recipe-images-exporter")
+    private val exportDir: Path = runDir.toPath().toAbsolutePath().resolve("recipe-images-exporter")
 
     fun export() {
         exportDir.toFile().deleteRecursively()
