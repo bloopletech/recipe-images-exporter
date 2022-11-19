@@ -48,7 +48,7 @@ class CraftingRecipeExporter(
                 var y = 122
 
                 for(item in recipeInfo.items) {
-                    drawImage(itemsData.slotImage(ItemStack(item, 1)), x, y, null)
+                    drawImage(itemsData.slotLabelImage(ItemStack(item, 1)), x, y, null)
 //                    val labelImage = recipesExporter.getLabel(item)
 //                    raster.setRect(44, y + 7, labelImage.getData(0, 0, width - 44 - 2, labelImage.height))
                     drawImage(itemsData.labelImage(item), 44, y + 6, null)

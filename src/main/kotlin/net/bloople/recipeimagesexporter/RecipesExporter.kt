@@ -19,22 +19,18 @@ class RecipesExporter(
         exportDir.toFile().deleteRecursively()
         Files.createDirectories(exportDir)
 
-        val itemIconsExtractor = ItemIconsExtractor(
-            recipeInfos.itemStacks,
-            exportDir.resolve("icons.png"),
-            itemRenderer,
-            textRenderer
-        )
+        val itemIconsExtractor = ItemIconsExtractor(recipeInfos.itemStacks, exportDir, itemRenderer, textRenderer)
         itemIconsExtractor.extract()
 
-        val itemLabelsExtractor = ItemLabelsExtractor(
-            recipeInfos.uniqueItems,
-            exportDir.resolve("labels.png"),
-            textRenderer
-        )
+        val itemLabelsExtractor = ItemLabelsExtractor(recipeInfos.uniqueItems, exportDir, textRenderer)
         itemLabelsExtractor.extract()
 
-        val itemsData = ItemsData(itemIconsExtractor.icons, itemLabelsExtractor.labels, itemLabelsExtractor.widths)
+        val itemsData = ItemsData(
+            itemIconsExtractor.icons,
+            itemIconsExtractor.labelIcons,
+            itemLabelsExtractor.labels,
+            itemLabelsExtractor.widths
+        )
 
         for(recipeInfo in recipeInfos.craftingRecipeInfos) {
             CraftingRecipeExporter(recipeInfo, exportDir, itemsData).export()

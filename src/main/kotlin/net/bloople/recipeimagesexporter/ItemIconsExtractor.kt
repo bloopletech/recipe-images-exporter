@@ -11,20 +11,23 @@ import kotlin.math.sqrt
 
 class ItemIconsExtractor(
     private val itemStacks: List<ItemStack>,
-    private val iconsPath: Path,
+    exportDir: Path,
     private val itemRenderer: ItemRenderer,
     private val textRenderer: TextRenderer
 ) {
+    private val iconsPath = exportDir.resolve("icons.png")
+    private val labelIconsPath = exportDir.resolve("label-icons.png")
     private val iconsStride = ceil(sqrt(itemStacks.size.toDouble())).toInt()
 
-    val icons = HashMap<String, BufferedImage>()
+    lateinit var icons: Map<String, BufferedImage>
+    lateinit var labelIcons: Map<String, BufferedImage>
 
-    fun exportIcons() {
+    private fun exportIcons(r: Float, g: Float, b: Float, path: Path) {
         val width = iconsStride * 34
         val height = iconsStride * 34
         val scaledWidth = iconsStride * 17
 
-        val nativeImage = renderToTexture(width, height, 0.5451f, 0.5451f, 0.5451f, 2.0) {
+        val nativeImage = renderToTexture(width, height, r, g, b, 2.0) {
             var x = 0
             var y = 0
             for(itemStack in itemStacks) {
@@ -39,11 +42,12 @@ class ItemIconsExtractor(
             }
         }
 
-        nativeImage.use { it.writeTo(iconsPath.toFile()) }
+        nativeImage.use { it.writeTo(path.toFile()) }
     }
 
-    fun importIcons() {
-        val iconsImage = ImageIO.read(iconsPath.toFile()).asARGB()
+    private fun importIcons(path: Path): Map<String, BufferedImage> {
+        val iconsImage = ImageIO.read(path.toFile()).asARGB()
+        val icons = HashMap<String, BufferedImage>()
 
         for((index, itemStack) in itemStacks.withIndex()) {
             val x = (index % iconsStride) * 34
@@ -55,6 +59,18 @@ class ItemIconsExtractor(
 
             icons[itemStack.uniqueKey] = image
         }
+
+        return icons
+    }
+
+    fun exportIcons() {
+        exportIcons(0.5451f, 0.5451f, 0.5451f, iconsPath)
+        exportIcons(0.7765f, 0.7765f, 0.7765f, labelIconsPath)
+    }
+
+    fun importIcons() {
+        icons = importIcons(iconsPath)
+        labelIcons = importIcons(labelIconsPath)
     }
 
     fun extract() {

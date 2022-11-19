@@ -8,9 +8,11 @@ import javax.imageio.ImageIO
 
 class ItemLabelsExtractor(
     private val items: List<Item>,
-    private val labelsPath: Path,
+    exportDir: Path,
     private val textRenderer: TextRenderer
 ) {
+    private val labelsPath = exportDir.resolve("labels.png")
+
     lateinit var widths: Map<Item, Int>
     val labels = HashMap<Item, BufferedImage>()
 
