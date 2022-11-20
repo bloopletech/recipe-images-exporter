@@ -2,8 +2,10 @@ package net.bloople.recipeimagesexporter
 
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
+import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
+import net.minecraft.text.Text
 import net.minecraft.util.Identifier
 import net.minecraft.util.registry.Registry
 import org.slf4j.Logger
@@ -142,6 +144,17 @@ inline fun <R> Graphics2D.applyComposite(newComposite: AlphaComposite, block: Gr
 
 fun Graphics2D.drawImage(image: Image) {
     drawImage(image, 0, 0, null)
+}
+
+fun MinecraftClient.sendMessage(message: Text) {
+    execute {
+        inGameHud.chatHud.addMessage(message)
+        narratorManager.narrate(message)
+    }
+}
+
+fun MinecraftClient.sendMessage(message: String) {
+    sendMessage(Text.literal(message))
 }
 
 fun getLogger(name: String): Logger {

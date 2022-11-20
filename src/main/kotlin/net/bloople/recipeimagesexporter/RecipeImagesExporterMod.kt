@@ -1,13 +1,13 @@
 package net.bloople.recipeimagesexporter
 
+import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.api.*
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.util.InputUtil
-import net.minecraft.recipe.RecipeManager
-import org.lwjgl.glfw.GLFW
+import net.minecraft.command.CommandRegistryAccess
 import org.slf4j.Logger
 
 
@@ -17,37 +17,34 @@ const val MOD_NAME = "RecipeImagesExporter"
 @Suppress("UNUSED")
 @EnvironmentInterface(value=EnvType.CLIENT, itf=ClientModInitializer::class)
 object RecipeImagesExporterMod: ClientModInitializer {
-    private lateinit var keyBinding: KeyBinding
+    private var exportRunning = false
 
     @Environment(value=EnvType.CLIENT)
     override fun onInitializeClient() {
         LOGGER.info("$MOD_NAME onInitializeClient()")
 
-        keyBinding = KeyBindingHelper.registerKeyBinding(
-            KeyBinding(
-                "key.$MOD_ID.export",  // The translation key of the keybinding's name
-                InputUtil.Type.KEYSYM,  // The type of the keybinding, KEYSYM for keyboard, MOUSE for mouse.
-                GLFW.GLFW_KEY_R,  // The keycode of the key
-                "category.$MOD_ID.export" // The translation key of the keybinding's category.
+        ClientCommandRegistrationCallback.EVENT.register(ClientCommandRegistrationCallback {
+            dispatcher: CommandDispatcher<FabricClientCommandSource?>, _: CommandRegistryAccess? ->
+            dispatcher.register(
+                ClientCommandManager.literal("export-recipe-images").executes {
+                    context: CommandContext<FabricClientCommandSource> ->
+                    export(context.source.client)
+                    0
+                }
             )
-        )
-
-        ClientTickEvents.END_CLIENT_TICK.register(ClientTickEvents.EndTick { client: MinecraftClient ->
-            while(keyBinding.wasPressed()) {
-                export(client)
-            }
         })
 
         LOGGER.info("$MOD_NAME end onInitializeClient()")
     }
 
     private fun export(client: MinecraftClient) {
-        RecipesExporter(
-            client.world!!.recipeManager,
-            client.runDirectory,
-            client.itemRenderer,
-            client.textRenderer
-        ).export()
+        if(exportRunning) {
+            client.sendMessage("Please wait for the current export to complete before starting another one")
+            return
+        }
+
+        exportRunning = true
+        exportRecipes(client).thenRunAsync { exportRunning = false }
     }
 
     val LOGGER: Logger = getLogger(this::class)
