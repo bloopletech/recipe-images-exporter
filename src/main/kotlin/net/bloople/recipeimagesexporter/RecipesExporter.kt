@@ -1,6 +1,5 @@
 package net.bloople.recipeimagesexporter
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Util
 import java.nio.file.Files
@@ -31,7 +30,7 @@ fun exportRecipes(client: MinecraftClient): CompletableFuture<Void> {
         itemIconsExtractor = ItemIconsExtractor(recipeInfos.itemStacks, exportDir, client.itemRenderer, client.textRenderer)
         itemIconsExtractor.exportIcons()
 
-        itemLabelsExtractor = ItemLabelsExtractor(recipeInfos.uniqueItems, exportDir, client.textRenderer)
+        itemLabelsExtractor = ItemLabelsExtractor(recipeInfos.items, exportDir, client.textRenderer)
         itemLabelsExtractor.exportLabels()
 
         client.sendMessage("Generated icons and labels")

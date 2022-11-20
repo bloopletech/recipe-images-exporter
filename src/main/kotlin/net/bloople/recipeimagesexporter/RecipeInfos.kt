@@ -132,11 +132,8 @@ class RecipeInfos(recipeManager: RecipeManager) {
         smithingRecipeInfos
     ).flatten()
 
-    val uniqueItems = allRecipeInfos.flatMap { it.items }.distinctBy { it.identifier }.sortedBy { it.identifier }
+    val items = allRecipeInfos.flatMap { it.items }.distinctBy { it.identifier }.sortedBy { it.identifier }
 
-    val uniqueItemStacks = allRecipeInfos.flatMap { it.itemStacks }.distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
-
-    val oneItemStacks =  uniqueItems.map { ItemStack(it, 1) }
-
-    val itemStacks = (uniqueItemStacks + oneItemStacks).distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
+    val itemStacks = (allRecipeInfos.flatMap { it.itemStacks } + items.map { ItemStack(it) })
+        .distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
 }
