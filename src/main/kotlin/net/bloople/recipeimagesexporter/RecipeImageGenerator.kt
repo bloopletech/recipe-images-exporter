@@ -5,5 +5,5 @@ import java.awt.image.BufferedImage
 interface RecipeImageGenerator {
     val width: Int
     val height: Int
-    fun export(imageWidth: Int = width, imageHeight: Int = height): BufferedImage
+    fun generate(imageWidth: Int = width, imageHeight: Int = height): BufferedImage
 }

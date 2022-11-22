@@ -13,7 +13,7 @@ class StonecuttingRecipeImageGenerator(
     override val width = max(168 + rightImage.width, recipeInfo.items.maxOf { itemsData.itemNameWidths[it]!! } + 44 + 8)
     override val height = 164
 
-    override fun export(imageWidth: Int, imageHeight: Int): BufferedImage {
+    override fun generate(imageWidth: Int, imageHeight: Int): BufferedImage {
         return BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB).apply {
             raster.setRect(0, 0, baseImage.getData(0, 0, width, height))
             raster.setRect(width - 2, 0, rightImage.getData(0, 0, 2, height))

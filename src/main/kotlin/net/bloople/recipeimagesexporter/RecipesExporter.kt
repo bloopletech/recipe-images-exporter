@@ -11,12 +11,12 @@ import javax.imageio.stream.FileImageOutputStream
 
 class RecipesExporter {
     private lateinit var exportDir: Path
-    private lateinit var itemsData: ItemsData
 
     fun export(client: MinecraftClient): CompletableFuture<Void> {
         client.sendMessage("Starting export of recipe images")
 
         val step1 = CompletableFuture.runAsync({
+            client.sendMessage("Deleting any existing export")
             exportDir = client.runDirectory.toPath().toAbsolutePath().resolve("recipe-images-exporter")
             exportDir.toFile().deleteRecursively()
             Files.createDirectories(exportDir)
@@ -29,8 +29,10 @@ class RecipesExporter {
         lateinit var itemLabelsExtractor: ItemLabelsExtractor
 
         val step2 = step1.thenRunAsync({
+            client.sendMessage("Gathering icons and labels")
             recipeInfos = RecipeInfos(client.world!!.recipeManager)
             client.sendMessage("Gathered ${recipeInfos.all.size} recipes for export")
+            client.sendMessage("Generating icons and labels")
 
             itemIconsExtractor = ItemIconsExtractor(
                 recipeInfos.itemStacks,
@@ -50,7 +52,7 @@ class RecipesExporter {
             itemIconsExtractor.importIcons()
             itemLabelsExtractor.importLabels()
 
-            itemsData = ItemsData(
+            val itemsData = ItemsData(
                 itemIconsExtractor.slotIcons,
                 itemIconsExtractor.labelIcons,
                 itemIconsExtractor.transparentIcons,
@@ -58,33 +60,12 @@ class RecipesExporter {
                 itemLabelsExtractor.widths
             )
 
-            exportList(recipeInfos.crafting)
-            exportGroups(recipeInfos.craftingGroups)
-            client.sendMessage("Exported ${recipeInfos.crafting.size} crafting recipes")
-
-            exportList(recipeInfos.smelting)
-            exportGroups(recipeInfos.smeltingGroups)
-            client.sendMessage("Exported ${recipeInfos.smelting.size} smelting recipes")
-
-            exportList(recipeInfos.blasting)
-            exportGroups(recipeInfos.blastingGroups)
-            client.sendMessage("Exported ${recipeInfos.blasting.size} blasting recipes")
-
-            exportList(recipeInfos.smoking)
-            exportGroups(recipeInfos.smokingGroups)
-            client.sendMessage("Exported ${recipeInfos.smoking.size} smoking recipes")
-
-            exportList(recipeInfos.campfireCooking)
-            exportGroups(recipeInfos.campfireCookingGroups)
-            client.sendMessage("Exported ${recipeInfos.campfireCooking.size} campfire cooking recipes")
-
-            exportList(recipeInfos.stonecutting)
-            exportGroups(recipeInfos.stonecuttingGroups)
-            client.sendMessage("Exported ${recipeInfos.stonecutting.size} stonecutting recipes")
-
-            exportList(recipeInfos.smithing)
-            exportGroups(recipeInfos.smithingGroups)
-            client.sendMessage("Exported ${recipeInfos.smithingGroups.size} smithing recipes")
+            var count = 0
+            for(groupChunk in recipeInfos.groups.chunked(100)) {
+                for(group in groupChunk) exportGroup(group, itemsData)
+                count += groupChunk.size
+                client.sendMessage("Exported $count crafting recipes")
+            }
 
             client.sendMessage("Export complete")
         }, Util.getIoWorkerExecutor())
@@ -92,19 +73,15 @@ class RecipesExporter {
         return step3
     }
 
-    private fun exportList(recipeInfos: List<RecipeInfo>) {
-        for(recipeInfo in recipeInfos) writeRecipeImage(recipeInfo, recipeInfo.imageGenerator(itemsData).export())
-    }
+    private fun exportGroup(group: List<RecipeInfo>, itemsData: ItemsData) {
+        for(recipeInfo in group) writeRecipeImage(recipeInfo, recipeInfo.imageGenerator(itemsData).generate())
 
-    private fun exportGroups(recipeInfoGroups: List<List<RecipeInfo>>) {
-        for(recipeInfos in recipeInfoGroups) {
-            if(recipeInfos.size == 1) continue
-            val exporters = recipeInfos.map { it.imageGenerator(itemsData) }
-            val width = exporters.maxOf { it.width }
-            val height = exporters.maxOf { it.height }
-            val images = exporters.map { it.export(width, height) }
-            writeRecipesAnimation(recipeInfos[0], images)
-        }
+        if(group.size == 1) return
+        val imageGenerators = group.map { it.imageGenerator(itemsData) }
+        val maxWidth = imageGenerators.maxOf { it.width }
+        val maxHeight = imageGenerators.maxOf { it.height }
+        val images = imageGenerators.map { it.generate(maxWidth, maxHeight) }
+        writeRecipesAnimation(group[0], images)
     }
 
     private fun writeRecipeImage(recipeInfo: RecipeInfo, image: BufferedImage) {

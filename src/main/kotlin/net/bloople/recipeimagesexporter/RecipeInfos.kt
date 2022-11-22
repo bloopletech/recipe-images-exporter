@@ -137,37 +137,32 @@ data class SmithingRecipeInfo(
 }
 
 class RecipeInfos(recipeManager: RecipeManager) {
-    var craftingGroups = recipeManager.listAllOfType(RecipeType.CRAFTING)
+    private val craftingGroups = recipeManager.listAllOfType(RecipeType.CRAFTING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertCraftingRecipe(it) }
-    val crafting = craftingGroups.flatten()
-    val smeltingGroups = recipeManager.listAllOfType(RecipeType.SMELTING)
+    private val smeltingGroups = recipeManager.listAllOfType(RecipeType.SMELTING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertSmeltingRecipe(it) }
-    val smelting = smeltingGroups.flatten()
-    val blastingGroups = recipeManager.listAllOfType(RecipeType.BLASTING)
+    private val blastingGroups = recipeManager.listAllOfType(RecipeType.BLASTING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertBlastingRecipe(it) }
-    val blasting = blastingGroups.flatten()
-    val smokingGroups = recipeManager.listAllOfType(RecipeType.SMOKING)
+    private val smokingGroups = recipeManager.listAllOfType(RecipeType.SMOKING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertSmokingRecipe(it) }
-    val smoking = smokingGroups.flatten()
-    val campfireCookingGroups = recipeManager.listAllOfType(RecipeType.CAMPFIRE_COOKING)
+    private val campfireCookingGroups = recipeManager.listAllOfType(RecipeType.CAMPFIRE_COOKING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertCampfireCookingRecipe(it) }
-    val campfireCooking = campfireCookingGroups.flatten()
-    val stonecuttingGroups = recipeManager.listAllOfType(RecipeType.STONECUTTING)
+    private val stonecuttingGroups = recipeManager.listAllOfType(RecipeType.STONECUTTING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertStonecuttingRecipe(it) }
-    val stonecutting = stonecuttingGroups.flatten()
-    val smithingGroups = recipeManager.listAllOfType(RecipeType.SMITHING)
+    private val smithingGroups = recipeManager.listAllOfType(RecipeType.SMITHING)
         .filterNot { it.isIgnoredInRecipeBook }.map { convertSmithingRecipe(it) }
-    val smithing = smithingGroups.flatten()
 
-    val all = listOf(
-        crafting,
-        smelting,
-        blasting,
-        smoking,
-        campfireCooking,
-        stonecutting,
-        smithing
+    val groups = listOf(
+        craftingGroups,
+        smeltingGroups,
+        blastingGroups,
+        smokingGroups,
+        campfireCookingGroups,
+        stonecuttingGroups,
+        smithingGroups
     ).flatten()
+
+    val all = groups.flatten()
 
     val items = all.flatMap { it.items }.distinctBy { it.identifier }.sortedBy { it.identifier }
 
