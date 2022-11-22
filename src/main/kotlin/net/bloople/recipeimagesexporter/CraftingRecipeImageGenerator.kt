@@ -1,33 +1,20 @@
-package net.bloople.recipeimagesexporter;
+package net.bloople.recipeimagesexporter
 
-import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import net.minecraft.item.ItemStack
 import java.awt.image.BufferedImage
 import java.lang.Integer.max
-import java.nio.file.Files
-import java.nio.file.Path
 import javax.imageio.ImageIO
 
 
-class CraftingRecipeExporter(
+class CraftingRecipeImageGenerator(
     private val recipeInfo: CraftingRecipeInfo,
-    private val exportDir: Path,
     private val itemsData: ItemsData
-) : Exporter {
-    override fun export() {
-        LOGGER.info("exporting ${recipeInfo.recipePath}")
-        loadImages()
+) : RecipeImageGenerator {
+    override val width = max(214 + rightImage.width, recipeInfo.items.maxOf { itemsData.itemNameWidths[it]!! } + 44 + 8)
+    override val height = 122 + bottomImage.height + 6 + (recipeInfo.items.size * 30) + (max(recipeInfo.items.size - 1, 0) * 4)
 
-        val recipeFilePath = exportDir.resolve("${recipeInfo.recipePath}.png")
-        Files.createDirectories(recipeFilePath.parent)
-
-        val cropWidth = max(
-            214 + rightImage.width,
-            recipeInfo.items.maxOf { itemsData.itemNameWidths[it]!! } + 44 + 8)
-        val cropHeight = 122 + bottomImage.height + 6 + (recipeInfo.items.size * 30) +
-            (max(recipeInfo.items.size - 1, 0) * 4)
-
-        val outputImage = BufferedImage(cropWidth, cropHeight, BufferedImage.TYPE_INT_ARGB).apply {
+    override fun export(imageWidth: Int, imageHeight: Int): BufferedImage {
+        return BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB).apply {
             raster.setRect(0, 0, baseImage.getData(0, 0, width, height))
             raster.setRect(0, height - 2, bottomImage.getData(0, 0, width, 2))
             raster.setRect(width - 2, 0, rightImage.getData(0, 0, 2, height))
@@ -56,22 +43,14 @@ class CraftingRecipeExporter(
                 }
             }
         }
-
-        ImageIO.write(outputImage, "PNG", recipeFilePath.toFile())
     }
 
     companion object {
         private const val craftingTopLeftImage = "iVBORw0KGgoAAAANSUhEUgAAAgAAAAIABAMAAAAGVsnJAAAAFVBMVEXb29ubm5tbW1vGxsY3NzeLi4v////TAbtBAAACpklEQVR42u3auQ3DMBAEQPXkFtTCtsD+S3BOQwYDAba4s+GFA5DH545D2vPqDgAAAAAAOOdkpQJgI4BMGSsVAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM0A51UCoAQgFxkAAAD4X4CMOSsVABstgdtGZADYBAFUAgRAO0AAtAMEQDtAALQDBEAfwFQB0A4QAJYAAG0QgKMwANdhAJ7EAHgWB+BrDAAAAEZkABiRAWATBAAAQA/AZ7P81jQB7AfwvAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHQB3DciA+CZAM0BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA8LO8AfPNCN6dp75vAAAAAElFTkSuQmCC"
         const val craftingRightImage = "iVBORw0KGgoAAAANSUhEUgAAAAIAAAIABAMAAABaz6A1AAAAFVBMVEXb29ubm5tbW1vGxsY3NzeLi4v////TAbtBAAAAFUlEQVQoz2NgZBBiUBqFo3AUjkQIAEg6Q9CIZupOAAAAAElFTkSuQmCC"
         private const val craftingBottomImage = "iVBORw0KGgoAAAANSUhEUgAAAgAAAAACBAMAAADcAXnrAAAAFVBMVEXb29ubm5tbW1vGxsY3NzeLi4v////TAbtBAAAAEklEQVQoz2NgVBrZgEFohAcAAPfOQ9CrWDAMAAAAAElFTkSuQmCC"
-        private lateinit var baseImage: BufferedImage
-        private lateinit var rightImage: BufferedImage
-        private lateinit var bottomImage: BufferedImage
-
-        private fun loadImages() {
-            if(!::baseImage.isInitialized) baseImage = ImageIO.read(decodeBase64(craftingTopLeftImage)).asARGB()
-            if(!::rightImage.isInitialized) rightImage = ImageIO.read(decodeBase64(craftingRightImage)).asARGB()
-            if(!::bottomImage.isInitialized) bottomImage = ImageIO.read(decodeBase64(craftingBottomImage)).asARGB()
-        }
+        private val baseImage = ImageIO.read(decodeBase64(craftingTopLeftImage)).asARGB()
+        private val rightImage = ImageIO.read(decodeBase64(craftingRightImage)).asARGB()
+        private val bottomImage = ImageIO.read(decodeBase64(craftingBottomImage)).asARGB()
     }
 }

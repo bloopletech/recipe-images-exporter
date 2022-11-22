@@ -7,16 +7,18 @@ import net.minecraft.recipe.RecipeType
 
 interface RecipeInfo {
     val recipeBasePath: String
+    val recipePath: String
     val itemStacks: List<ItemStack>
     val items: List<Item>
         get() {
             return itemStacks.map { it.item }.distinct()
         }
+    fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator
 }
 
 data class CraftingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slot1: ItemStack?,
     val slot2: ItemStack?,
     val slot3: ItemStack?,
@@ -43,97 +45,132 @@ data class CraftingRecipeInfo(
                 output
             ).filterNotNull().distinct()
         }
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return CraftingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 data class StonecuttingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
     override val itemStacks: List<ItemStack>
         get() = listOf(slot, output).distinct()
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return StonecuttingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 data class SmeltingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
     override val itemStacks: List<ItemStack>
         get() = listOf(slot, output).distinct()
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return SmeltingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 data class BlastingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
     override val itemStacks: List<ItemStack>
         get() = listOf(slot, output).distinct()
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return BlastingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 data class SmokingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
     override val itemStacks: List<ItemStack>
         get() = listOf(slot, output).distinct()
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return SmokingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 data class CampfireCookingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slot: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
     override val itemStacks: List<ItemStack>
         get() = listOf(slot, output).distinct()
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return CampfireCookingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 data class SmithingRecipeInfo(
     override val recipeBasePath: String,
-    val recipePath: String,
+    override val recipePath: String,
     val slotBase: ItemStack,
     val slotAddition: ItemStack,
     val output: ItemStack
 ) : RecipeInfo {
     override val itemStacks: List<ItemStack>
         get() = listOf(slotBase, slotAddition, output).distinct()
+
+    override fun imageGenerator(itemsData: ItemsData): RecipeImageGenerator {
+        return SmithingRecipeImageGenerator(this, itemsData)
+    }
 }
 
 class RecipeInfos(recipeManager: RecipeManager) {
-    val craftingRecipeInfos = recipeManager.listAllOfType(RecipeType.CRAFTING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertCraftingRecipe(it) }
-    val smeltingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMELTING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmeltingRecipe(it) }
-    val blastingRecipeInfos = recipeManager.listAllOfType(RecipeType.BLASTING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertBlastingRecipe(it) }
-    val smokingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMOKING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmokingRecipe(it) }
-    val campfireCookingRecipeInfos = recipeManager.listAllOfType(RecipeType.CAMPFIRE_COOKING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertCampfireCookingRecipe(it) }
-    val stonecuttingRecipeInfos = recipeManager.listAllOfType(RecipeType.STONECUTTING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertStonecuttingRecipe(it) }
-    val smithingRecipeInfos = recipeManager.listAllOfType(RecipeType.SMITHING)
-        .filterNot { it.isIgnoredInRecipeBook }.flatMap { convertSmithingRecipe(it) }
+    var craftingGroups = recipeManager.listAllOfType(RecipeType.CRAFTING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertCraftingRecipe(it) }
+    val crafting = craftingGroups.flatten()
+    val smeltingGroups = recipeManager.listAllOfType(RecipeType.SMELTING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertSmeltingRecipe(it) }
+    val smelting = smeltingGroups.flatten()
+    val blastingGroups = recipeManager.listAllOfType(RecipeType.BLASTING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertBlastingRecipe(it) }
+    val blasting = blastingGroups.flatten()
+    val smokingGroups = recipeManager.listAllOfType(RecipeType.SMOKING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertSmokingRecipe(it) }
+    val smoking = smokingGroups.flatten()
+    val campfireCookingGroups = recipeManager.listAllOfType(RecipeType.CAMPFIRE_COOKING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertCampfireCookingRecipe(it) }
+    val campfireCooking = campfireCookingGroups.flatten()
+    val stonecuttingGroups = recipeManager.listAllOfType(RecipeType.STONECUTTING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertStonecuttingRecipe(it) }
+    val stonecutting = stonecuttingGroups.flatten()
+    val smithingGroups = recipeManager.listAllOfType(RecipeType.SMITHING)
+        .filterNot { it.isIgnoredInRecipeBook }.map { convertSmithingRecipe(it) }
+    val smithing = smithingGroups.flatten()
 
-    val allRecipeInfos = listOf(
-        craftingRecipeInfos,
-        smeltingRecipeInfos,
-        blastingRecipeInfos,
-        smokingRecipeInfos,
-        campfireCookingRecipeInfos,
-        stonecuttingRecipeInfos,
-        smithingRecipeInfos
+    val all = listOf(
+        crafting,
+        smelting,
+        blasting,
+        smoking,
+        campfireCooking,
+        stonecutting,
+        smithing
     ).flatten()
 
-    val items = allRecipeInfos.flatMap { it.items }.distinctBy { it.identifier }.sortedBy { it.identifier }
+    val items = all.flatMap { it.items }.distinctBy { it.identifier }.sortedBy { it.identifier }
 
-    val itemStacks = (allRecipeInfos.flatMap { it.itemStacks } + items.map { ItemStack(it) })
-        .distinctBy { it.uniqueKey }.sortedBy { it.uniqueKey }
+    val itemStacks = (all.flatMap { it.itemStacks } + items.map { ItemStack(it) }).distinctBy { it.uniqueKey }
+        .sortedBy { it.uniqueKey }
 }

@@ -2,89 +2,125 @@ package net.bloople.recipeimagesexporter
 
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Util
+import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
+import javax.imageio.ImageIO
+import javax.imageio.stream.FileImageOutputStream
 
-fun exportRecipes(client: MinecraftClient): CompletableFuture<Void> {
-    client.sendMessage("Starting export of recipe images")
+class RecipesExporter {
+    private lateinit var exportDir: Path
+    private lateinit var itemsData: ItemsData
 
-    lateinit var exportDir: Path
+    fun export(client: MinecraftClient): CompletableFuture<Void> {
+        client.sendMessage("Starting export of recipe images")
 
-    val step1 = CompletableFuture.runAsync({
-        exportDir = client.runDirectory.toPath().toAbsolutePath().resolve("recipe-images-exporter")
-        exportDir.toFile().deleteRecursively()
-        Files.createDirectories(exportDir)
+        val step1 = CompletableFuture.runAsync({
+            exportDir = client.runDirectory.toPath().toAbsolutePath().resolve("recipe-images-exporter")
+            exportDir.toFile().deleteRecursively()
+            Files.createDirectories(exportDir)
 
-        client.sendMessage("Deleted any existing export and created export directory $exportDir")
-    }, Util.getIoWorkerExecutor())
+            client.sendMessage("Deleted any existing export and created export directory $exportDir")
+        }, Util.getIoWorkerExecutor())
 
-    lateinit var recipeInfos: RecipeInfos
-    lateinit var itemIconsExtractor: ItemIconsExtractor
-    lateinit var itemLabelsExtractor: ItemLabelsExtractor
+        lateinit var recipeInfos: RecipeInfos
+        lateinit var itemIconsExtractor: ItemIconsExtractor
+        lateinit var itemLabelsExtractor: ItemLabelsExtractor
 
-    val step2 = step1.thenRunAsync({
-        recipeInfos = RecipeInfos(client.world!!.recipeManager)
-        client.sendMessage("Gathered ${recipeInfos.allRecipeInfos.size} recipes for export")
+        val step2 = step1.thenRunAsync({
+            recipeInfos = RecipeInfos(client.world!!.recipeManager)
+            client.sendMessage("Gathered ${recipeInfos.all.size} recipes for export")
 
-        itemIconsExtractor = ItemIconsExtractor(recipeInfos.itemStacks, exportDir, client.itemRenderer, client.textRenderer)
-        itemIconsExtractor.exportIcons()
+            itemIconsExtractor = ItemIconsExtractor(
+                recipeInfos.itemStacks,
+                exportDir,
+                client.itemRenderer,
+                client.textRenderer
+            )
+            itemIconsExtractor.exportIcons()
 
-        itemLabelsExtractor = ItemLabelsExtractor(recipeInfos.items, exportDir, client.textRenderer)
-        itemLabelsExtractor.exportLabels()
+            itemLabelsExtractor = ItemLabelsExtractor(recipeInfos.items, exportDir, client.textRenderer)
+            itemLabelsExtractor.exportLabels()
 
-        client.sendMessage("Generated icons and labels")
-    }, client)
+            client.sendMessage("Generated icons and labels")
+        }, client)
 
-    val step3 = step2.thenRunAsync({
-        itemIconsExtractor.importIcons()
-        itemLabelsExtractor.importLabels()
+        val step3 = step2.thenRunAsync({
+            itemIconsExtractor.importIcons()
+            itemLabelsExtractor.importLabels()
 
-        val itemsData = ItemsData(
-            itemIconsExtractor.slotIcons,
-            itemIconsExtractor.labelIcons,
-            itemIconsExtractor.transparentIcons,
-            itemLabelsExtractor.labels,
-            itemLabelsExtractor.widths
-        )
+            itemsData = ItemsData(
+                itemIconsExtractor.slotIcons,
+                itemIconsExtractor.labelIcons,
+                itemIconsExtractor.transparentIcons,
+                itemLabelsExtractor.labels,
+                itemLabelsExtractor.widths
+            )
 
-        for(recipeInfo in recipeInfos.craftingRecipeInfos) {
-            CraftingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+            exportList(recipeInfos.crafting)
+            exportGroups(recipeInfos.craftingGroups)
+            client.sendMessage("Exported ${recipeInfos.crafting.size} crafting recipes")
+
+            exportList(recipeInfos.smelting)
+            exportGroups(recipeInfos.smeltingGroups)
+            client.sendMessage("Exported ${recipeInfos.smelting.size} smelting recipes")
+
+            exportList(recipeInfos.blasting)
+            exportGroups(recipeInfos.blastingGroups)
+            client.sendMessage("Exported ${recipeInfos.blasting.size} blasting recipes")
+
+            exportList(recipeInfos.smoking)
+            exportGroups(recipeInfos.smokingGroups)
+            client.sendMessage("Exported ${recipeInfos.smoking.size} smoking recipes")
+
+            exportList(recipeInfos.campfireCooking)
+            exportGroups(recipeInfos.campfireCookingGroups)
+            client.sendMessage("Exported ${recipeInfos.campfireCooking.size} campfire cooking recipes")
+
+            exportList(recipeInfos.stonecutting)
+            exportGroups(recipeInfos.stonecuttingGroups)
+            client.sendMessage("Exported ${recipeInfos.stonecutting.size} stonecutting recipes")
+
+            exportList(recipeInfos.smithing)
+            exportGroups(recipeInfos.smithingGroups)
+            client.sendMessage("Exported ${recipeInfos.smithingGroups.size} smithing recipes")
+
+            client.sendMessage("Export complete")
+        }, Util.getIoWorkerExecutor())
+
+        return step3
+    }
+
+    private fun exportList(recipeInfos: List<RecipeInfo>) {
+        for(recipeInfo in recipeInfos) writeRecipeImage(recipeInfo, recipeInfo.imageGenerator(itemsData).export())
+    }
+
+    private fun exportGroups(recipeInfoGroups: List<List<RecipeInfo>>) {
+        for(recipeInfos in recipeInfoGroups) {
+            if(recipeInfos.size == 1) continue
+            val exporters = recipeInfos.map { it.imageGenerator(itemsData) }
+            val width = exporters.maxOf { it.width }
+            val height = exporters.maxOf { it.height }
+            val images = exporters.map { it.export(width, height) }
+            writeRecipesAnimation(recipeInfos[0], images)
         }
-        client.sendMessage("Exported ${recipeInfos.craftingRecipeInfos.size} crafting recipes")
+    }
 
-        for(recipeInfo in recipeInfos.smeltingRecipeInfos) {
-            SmeltingRecipeExporter(recipeInfo, exportDir, itemsData).export()
+    private fun writeRecipeImage(recipeInfo: RecipeInfo, image: BufferedImage) {
+        val recipeFilePath = exportDir.resolve("${recipeInfo.recipePath}.png")
+        Files.createDirectories(recipeFilePath.parent)
+        ImageIO.write(image, "PNG", recipeFilePath.toFile())
+    }
+
+    private fun writeRecipesAnimation(firstRecipeInfo: RecipeInfo, images: List<BufferedImage>) {
+        val recipeFilePath = exportDir.resolve("${firstRecipeInfo.recipeBasePath}.gif")
+        Files.createDirectories(recipeFilePath.parent)
+        FileImageOutputStream(recipeFilePath.toFile()).use { outStream ->
+            GifSequenceWriter(outStream, images[0].type, 500, true).use {
+                for(image in images) it.writeToSequence(image)
+            }
         }
-        client.sendMessage("Exported ${recipeInfos.smeltingRecipeInfos.size} smelting recipes")
-
-        for(recipeInfo in recipeInfos.blastingRecipeInfos) {
-            BlastingRecipeExporter(recipeInfo, exportDir, itemsData).export()
-        }
-        client.sendMessage("Exported ${recipeInfos.blastingRecipeInfos.size} blasting recipes")
-
-        for(recipeInfo in recipeInfos.smokingRecipeInfos) {
-            SmokingRecipeExporter(recipeInfo, exportDir, itemsData).export()
-        }
-        client.sendMessage("Exported ${recipeInfos.smokingRecipeInfos.size} smoking recipes")
-
-        for(recipeInfo in recipeInfos.campfireCookingRecipeInfos) {
-            CampfireCookingRecipeExporter(recipeInfo, exportDir, itemsData).export()
-        }
-        client.sendMessage("Exported ${recipeInfos.campfireCookingRecipeInfos.size} campfire cooking recipes")
-
-        for(recipeInfo in recipeInfos.stonecuttingRecipeInfos) {
-            StonecuttingRecipeExporter(recipeInfo, exportDir, itemsData).export()
-        }
-        client.sendMessage("Exported ${recipeInfos.stonecuttingRecipeInfos.size} stonecutting recipes")
-
-        for(recipeInfo in recipeInfos.smithingRecipeInfos) {
-            SmithingRecipeExporter(recipeInfo, exportDir, itemsData).export()
-        }
-        client.sendMessage("Exported ${recipeInfos.smithingRecipeInfos.size} smithing recipes")
-
-        client.sendMessage("Export complete")
-    }, Util.getIoWorkerExecutor())
-
-    return step3
+    }
 }
+

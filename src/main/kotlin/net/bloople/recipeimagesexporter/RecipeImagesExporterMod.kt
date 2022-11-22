@@ -44,7 +44,7 @@ object RecipeImagesExporterMod: ClientModInitializer {
         }
 
         exportRunning = true
-        exportRecipes(client).thenRunAsync { exportRunning = false }
+        RecipesExporter().export(client).thenRunAsync { exportRunning = false }
     }
 
     val LOGGER: Logger = getLogger(this::class)

@@ -1,32 +1,20 @@
 package net.bloople.recipeimagesexporter
 
-import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import net.minecraft.item.ItemStack
 import java.awt.image.BufferedImage
 import java.lang.Integer.max
-import java.nio.file.Files
-import java.nio.file.Path
 import javax.imageio.ImageIO
 
 
-class CampfireCookingRecipeExporter(
+class CampfireCookingRecipeImageGenerator(
     private val recipeInfo: CampfireCookingRecipeInfo,
-    private val exportDir: Path,
     private val itemsData: ItemsData
-) : Exporter {
-    override fun export() {
-        LOGGER.info("exporting ${recipeInfo.recipePath}")
-        loadImages()
+) : RecipeImageGenerator {
+    override val width = max(166 + rightImage.width, recipeInfo.items.maxOf { itemsData.itemNameWidths[it]!! } + 44 + 8)
+    override val height = 120
 
-        val recipeFilePath = exportDir.resolve("${recipeInfo.recipePath}.png")
-        Files.createDirectories(recipeFilePath.parent)
-
-        val cropWidth = max(
-            166 + rightImage.width,
-            recipeInfo.items.maxOf { itemsData.itemNameWidths[it]!! } + 44 + 8)
-        val cropHeight = 120
-
-        val outputImage = BufferedImage(cropWidth, cropHeight, BufferedImage.TYPE_INT_ARGB).apply {
+    override fun export(imageWidth: Int, imageHeight: Int): BufferedImage {
+        return BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB).apply {
             raster.setRect(0, 0, baseImage.getData(0, 0, width, height))
             raster.setRect(width - 2, 0, rightImage.getData(0, 0, 2, height))
 
@@ -44,18 +32,11 @@ class CampfireCookingRecipeExporter(
                 }
             }
         }
-
-        ImageIO.write(outputImage, "PNG", recipeFilePath.toFile())
     }
 
     companion object {
         private const val campfireCookingLeftImage = "iVBORw0KGgoAAAANSUhEUgAAAgAAAAB4CAIAAAAL9N0oAAACAUlEQVR42u3csW3DMBRF0e+Y82gBrcFFBHBANoSG4AhcwoUbNwaCwLas8JwmRQoDv8jlS4Bceu8BwHx+nABgTun+ZYzhFgAWAAACAIAAACAAAAgAAOeUnn1j27YPfHzOOSLWdZ3q6G4LWAAAfN8CeHxFvk8pJSL2fZ/w9G4LWAAACMDRWmutNXcABAAAAbADAAQAAAGwAwAEAAABsAMABAAAAbADAAQAAAGwAwAEAIAPSqd+jx/4uf7PPmABACAAM/H3AEAAADil5AR/428AgAUAgAVw/jf4b36t7+0PWAAAWABz8PYHLAAALABvfwALAAALwNsfwAIAwALw9gewAACwALz9ASwAAI5fADnniCilePu/3Jy3BSwAAL7CpfceEWMMtwCwAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABABAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABAAAAQBAAAAQAAAEAAABAEAAABAAAAQAAAEAQAAAEAAABABAAAAQAAAEAAABAOC/SRFRa621ugXAVK7LsvjpDzChGxZRVSsFwNU7AAAAAElFTkSuQmCC"
-        private lateinit var baseImage: BufferedImage
-        private lateinit var rightImage: BufferedImage
-
-        private fun loadImages() {
-            if(!::baseImage.isInitialized) baseImage = ImageIO.read(decodeBase64(campfireCookingLeftImage)).asARGB()
-            if(!::rightImage.isInitialized) rightImage = ImageIO.read(decodeBase64(CraftingRecipeExporter.craftingRightImage)).asARGB()
-        }
+        private val baseImage = ImageIO.read(decodeBase64(campfireCookingLeftImage)).asARGB()
+        private val rightImage = ImageIO.read(decodeBase64(CraftingRecipeImageGenerator.craftingRightImage)).asARGB()
     }
 }
