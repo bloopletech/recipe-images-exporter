@@ -1,5 +1,6 @@
 package net.bloople.recipeimagesexporter
 
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.font.TextRenderer
 import net.minecraft.item.Item
 import java.awt.image.BufferedImage
@@ -7,17 +8,18 @@ import java.nio.file.Path
 import javax.imageio.ImageIO
 
 class ItemLabelsExtractor(
-    private val items: List<Item>,
-    exportDir: Path,
+    items: List<Item>,
+    private val exportDir: Path,
     private val textRenderer: TextRenderer
 ) {
-    private val labelsPath = exportDir.resolve("labels.png")
+    private val chunkedItems: List<List<Item>> = items.chunked(chunkSize)
+    private val labelsPaths = ArrayList<Path>()
 
-    lateinit var widths: Map<Item, Int>
+    val widths = HashMap<Item, Int>()
     val labels = HashMap<Item, BufferedImage>()
 
-    fun exportLabels() {
-        widths = items.associateWith { textRenderer.getWidth(it.name) * 2 }
+    private fun exportLabels(items: List<Item>, path: Path) {
+        widths += items.associateWith { textRenderer.getWidth(it.name) * 2 }
 
         val width = widths.values.max()
         val height = items.size * 18
@@ -30,26 +32,39 @@ class ItemLabelsExtractor(
             }
         }
 
-        nativeImage.use { it.writeTo(labelsPath.toFile()) }
+        nativeImage.use { it.writeTo(path.toFile()) }
     }
 
-    fun importLabels() {
-        val labelsImage = ImageIO.read(labelsPath.toFile()).asARGB()
-
-        for((index, item) in items.withIndex()) {
-            val y = index * 18
-            val labelWidth = widths[item]!!
-
-            val image = BufferedImage(labelWidth, 18, BufferedImage.TYPE_INT_ARGB).apply {
-                raster.setRect(0, 0, labelsImage.getData(0, y, width, height))
-            }
-
-            labels[item] = image
+    fun exportLabels(client: MinecraftClient) {
+        client.sendMessage("Generating labels")
+        var labelsCount = 0
+        for((index, chunk) in chunkedItems.withIndex()) {
+            val labelsPath = exportDir.resolve("labels_$index.png")
+            exportLabels(chunk, labelsPath)
+            labelsPaths.add(labelsPath)
+            labelsCount += chunk.size
+            client.sendMessage("Generated $labelsCount labels")
         }
     }
 
-    fun extract() {
-        exportLabels()
-        importLabels()
+    fun importLabels() {
+        for((chunkIndex, labelsPath) in labelsPaths.withIndex()) {
+            val labelsImage = ImageIO.read(labelsPath.toFile()).asARGB()
+
+            for((index, item) in chunkedItems[chunkIndex].withIndex()) {
+                val y = index * 18
+                val labelWidth = widths[item]!!
+
+                val image = BufferedImage(labelWidth, 18, BufferedImage.TYPE_INT_ARGB).apply {
+                    raster.setRect(0, 0, labelsImage.getData(0, y, width, height))
+                }
+
+                labels[item] = image
+            }
+        }
+    }
+
+    companion object {
+        private const val chunkSize = 100
     }
 }

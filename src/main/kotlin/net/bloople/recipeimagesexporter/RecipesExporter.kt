@@ -40,10 +40,10 @@ class RecipesExporter {
                 client.itemRenderer,
                 client.textRenderer
             )
-            itemIconsExtractor.exportIcons()
+            itemIconsExtractor.exportIcons(client)
 
             itemLabelsExtractor = ItemLabelsExtractor(recipeInfos.items, exportDir, client.textRenderer)
-            itemLabelsExtractor.exportLabels()
+            itemLabelsExtractor.exportLabels(client)
 
             client.sendMessage("Generated icons and labels")
         }, client)
