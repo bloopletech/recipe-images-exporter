@@ -64,7 +64,7 @@ class RecipesExporter {
             for(groupChunk in recipeInfos.groups.chunked(100)) {
                 for(group in groupChunk) exportGroup(group, itemsData)
                 count += groupChunk.size
-                client.sendMessage("Exported $count crafting recipes")
+                client.sendMessage("Exported $count recipes")
             }
 
             client.sendMessage("Export complete")
