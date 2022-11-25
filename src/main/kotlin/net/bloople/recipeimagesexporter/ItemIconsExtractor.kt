@@ -26,7 +26,8 @@ class ItemIconsExtractor(
         var iconsCount = 0
         for(chunk in chunks) {
             chunk.exportIcons(slotBackground)
-            chunk.applyMaskColor()
+            chunk.findMaskColor()
+            chunk.exportIcons(chunk.maskColor)
             iconsCount += chunk.size
             client.sendMessage("Generated $iconsCount icons")
         }
@@ -43,7 +44,7 @@ class ItemIconsExtractor(
         private val iconsPath = exportDir.resolve("icons_$index.png")
         private val iconsStride = ceil(sqrt(itemStacks.size.toDouble())).toInt()
         val size = itemStacks.size
-        private lateinit var maskColor: Color
+        lateinit var maskColor: Color
 
         fun exportIcons(background: Color) {
             val width = iconsStride * 34
@@ -75,9 +76,8 @@ class ItemIconsExtractor(
             return ImageIO.read(iconsPath.toFile()).asARGB()
         }
 
-        fun applyMaskColor() {
+        fun findMaskColor() {
             maskColor = findMaskColor(getImage())
-            exportIcons(maskColor)
         }
 
         fun eraseMaskColor() {
