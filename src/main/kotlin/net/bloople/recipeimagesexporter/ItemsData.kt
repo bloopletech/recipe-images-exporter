@@ -1,19 +1,19 @@
 package net.bloople.recipeimagesexporter
 
+import net.bloople.recipeimagesexporter.CraftingRecipeImageGenerator.Companion.labelBackground
+import net.bloople.recipeimagesexporter.CraftingRecipeImageGenerator.Companion.slotBackground
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import java.awt.image.BufferedImage
 
 data class ItemsData(
-    val largeSlotIcons: Map<String, BufferedImage>,
-    val labelIcons: Map<String, BufferedImage>,
-    val transparentIcons: Map<String, BufferedImage>,
+    val icons: Map<String, BufferedImage>,
     val labels: Map<Item, BufferedImage>,
     val itemNameWidths: Map<Item, Int>
 ) {
-    val slotIcons = largeSlotIcons.mapValues { it.value.scaleImage(30, 30) }
-    val slotLabelIcons = labelIcons.mapValues { it.value.scaleImage(30, 30) }
-    val transparentSlotIcons = transparentIcons.mapValues { it.value.scaleImage(30, 30) }
+    private val slotIcons = icons.mapValues { it.value.scaleImage(30, 30).fillBackground(slotBackground) }
+    private val slotLabelIcons = icons.mapValues { it.value.scaleImage(30, 30).fillBackground(labelBackground) }
+    private val transparentSlotIcons = icons.mapValues { it.value.scaleImage(30, 30) }
 
     fun slotImage(itemStack: ItemStack): BufferedImage {
         return slotIcons[itemStack.uniqueKey]!!
@@ -28,7 +28,7 @@ data class ItemsData(
     }
 
     fun outputImage(itemStack: ItemStack): BufferedImage {
-        return largeSlotIcons[itemStack.uniqueKey]!!
+        return icons[itemStack.uniqueKey]!!
     }
 
     fun labelImage(item: Item): BufferedImage {

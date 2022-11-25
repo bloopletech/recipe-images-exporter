@@ -54,9 +54,7 @@ class RecipesExporter {
             itemLabelsExtractor.importLabels()
 
             val itemsData = ItemsData(
-                itemIconsExtractor.slotIcons,
-                itemIconsExtractor.labelIcons,
-                itemIconsExtractor.transparentIcons,
+                itemIconsExtractor.icons,
                 itemLabelsExtractor.labels,
                 itemLabelsExtractor.widths
             )

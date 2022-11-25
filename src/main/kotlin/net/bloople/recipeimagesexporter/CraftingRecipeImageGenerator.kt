@@ -1,6 +1,7 @@
 package net.bloople.recipeimagesexporter
 
 import net.minecraft.item.ItemStack
+import java.awt.Color
 import java.awt.image.BufferedImage
 import java.lang.Integer.max
 import javax.imageio.ImageIO
@@ -52,5 +53,7 @@ class CraftingRecipeImageGenerator(
         private val baseImage = ImageIO.read(decodeBase64(craftingTopLeftImage)).asARGB()
         private val rightImage = ImageIO.read(decodeBase64(craftingRightImage)).asARGB()
         private val bottomImage = ImageIO.read(decodeBase64(craftingBottomImage)).asARGB()
+        val slotBackground = Color(139, 139, 139)
+        val labelBackground = Color(198, 198, 198)
     }
 }

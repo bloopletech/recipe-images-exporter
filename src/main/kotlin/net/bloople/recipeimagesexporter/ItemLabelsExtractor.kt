@@ -37,12 +37,12 @@ class ItemLabelsExtractor(
         }
     }
 
-    inner class Chunk(private val items: List<Item>, index: Int) {
+    private inner class Chunk(private val items: List<Item>, index: Int) {
         private val labelsPath = exportDir.resolve("labels_$index.png")
-        internal val size = items.size
-        internal val widths by lazy { items.associateWith { textRenderer.getWidth(it.name) * 2 } }
+        val size = items.size
+        val widths by lazy { items.associateWith { textRenderer.getWidth(it.name) * 2 } }
 
-        internal fun exportLabels() {
+        fun exportLabels() {
             val width = widths.values.max()
             val height = items.size * 18
 

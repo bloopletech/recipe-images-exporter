@@ -1,7 +1,5 @@
 package net.bloople.recipeimagesexporter
 
-import net.fabricmc.api.EnvType
-import net.fabricmc.api.Environment
 import net.minecraft.client.MinecraftClient
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
@@ -11,6 +9,7 @@ import net.minecraft.util.registry.Registry
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.AlphaComposite
+import java.awt.Color
 import java.awt.Graphics2D
 import java.awt.Image
 import java.awt.Rectangle
@@ -125,6 +124,16 @@ fun BufferedImage.flipImage(mode: ImageFlipMode): BufferedImage {
         createFlipTransform(mode, width.toDouble(), height.toDouble())
     val affineTransformOp = AffineTransformOp(affineTransform, AffineTransformOp.TYPE_BICUBIC)
     return affineTransformOp.filter(this, null)
+}
+
+fun BufferedImage.fillBackground(background: Color): BufferedImage {
+    return blankClone().apply {
+        createGraphics().use {
+            color = background
+            fillRect(0, 0, width, height)
+            drawImage(this@fillBackground)
+        }
+    }
 }
 
 inline fun <R> Graphics2D.use(block: Graphics2D.() -> R): R {
