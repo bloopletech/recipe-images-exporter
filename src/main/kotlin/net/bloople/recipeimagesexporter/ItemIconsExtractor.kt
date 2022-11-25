@@ -18,11 +18,7 @@ class ItemIconsExtractor(
     private val itemRenderer: ItemRenderer,
     private val textRenderer: TextRenderer
 ) {
-    private val chunkedItemStacks: List<List<ItemStack>> = itemStacks.chunked(chunkSize)
-    private val iconsPaths = ArrayList<Path>()
-    private val labelIconsPaths = ArrayList<Path>()
-    private val transparentIconsPaths = ArrayList<Path>()
-    private val iconsStrides = ArrayList<Int>()
+    private val chunks = itemStacks.chunked(chunkSize).mapIndexed { index, itemStacks -> Chunk(itemStacks, index) }
     private var maskColorRed = 0
     private var maskColorGreen = 0
     private var maskColorBlue = 0
@@ -32,43 +28,8 @@ class ItemIconsExtractor(
     lateinit var labelIcons: Map<String, BufferedImage>
     lateinit var transparentIcons: Map<String, BufferedImage>
 
-    private fun exportIcons(r: Float, g: Float, b: Float, iconsStride: Int, itemStacks: List<ItemStack>, path: Path) {
-        val width = iconsStride * 34
-        val height = iconsStride * 34
-        val scaledWidth = iconsStride * 17
-
-        val nativeImage = renderToTexture(width, height, r, g, b, 2.0) {
-            var x = 0
-            var y = 0
-            for(itemStack in itemStacks) {
-                itemRenderer.renderInGui(itemStack, x, y)
-                itemRenderer.renderGuiItemOverlay(textRenderer, itemStack, x, y)
-
-                x += 17
-                if(x >= scaledWidth) {
-                    x = 0
-                    y += 17
-                }
-            }
-        }
-
-        nativeImage.use { it.writeTo(path.toFile()) }
-    }
-
     private fun findIconsMaskColor() {
-        val pixelsPixels = ArrayList<IntArray>(iconsPaths.size)
-
-        for(iconsPath in iconsPaths) {
-            val iconsImage = ImageIO.read(iconsPath.toFile()).asARGB()
-
-            val pixels = IntArray(iconsImage.width * iconsImage.height)
-            for(x in 0 until iconsImage.width) {
-                for(y in 0 until iconsImage.height) {
-                    pixels[x * y] = iconsImage.getRGB(x, y)
-                }
-            }
-            pixelsPixels.add(pixels)
-        }
+        val pixelsPixels = chunks.map { it.getPixels() }
 
         maskColor = 0
         outer@ while(true) {
@@ -94,14 +55,105 @@ class ItemIconsExtractor(
         }
     }
 
-    private fun importIcons(paths: List<Path>): Map<String, BufferedImage> {
-        val icons = HashMap<String, BufferedImage>()
+    fun exportIcons(client: MinecraftClient) {
+        client.sendMessage("Generating icons")
+        var iconsCount = 0
+        for(chunk in chunks) {
+            chunk.exportIcons(0.5451f, 0.5451f, 0.5451f, chunk.iconsPath)
+            iconsCount += chunk.size
+            client.sendMessage("Generated $iconsCount icons")
+        }
 
-        for((chunkIndex, iconsPath) in paths.withIndex()) {
+        client.sendMessage("Generating label icons")
+        var labelIconsCount = 0
+        for(chunk in chunks) {
+            chunk.exportIcons(0.7765f, 0.7765f, 0.7765f, chunk.labelIconsPath)
+            labelIconsCount += chunk.size
+            client.sendMessage("Generated $iconsCount label icons")
+        }
+
+        findIconsMaskColor()
+
+        client.sendMessage("Generating transparent icons")
+        var transparentIconsCount = 0
+        for(chunk in chunks) {
+            chunk.exportIcons(
+                maskColorRed / 255.0f,
+                maskColorGreen / 255.0f,
+                maskColorBlue / 255.0f,
+                chunk.transparentIconsPath
+            )
+            transparentIconsCount += chunk.size
+            client.sendMessage("Generated $transparentIconsCount transparent icons")
+        }
+    }
+
+    fun importIcons() {
+        slotIcons = HashMap<String, BufferedImage>().also {
+            for(chunk in chunks) it += chunk.importIcons(chunk.iconsPath)
+        }
+
+        labelIcons = HashMap<String, BufferedImage>().also {
+            for(chunk in chunks) it += chunk.importIcons(chunk.labelIconsPath)
+        }
+
+        for(chunk in chunks) {
+            val unmaskedIconsImage = ImageIO.read(chunk.transparentIconsPath.toFile()).asARGB()
+            applyMaskColor(unmaskedIconsImage)
+            ImageIO.write(unmaskedIconsImage, "PNG", chunk.transparentIconsPath.toFile())
+        }
+
+        transparentIcons = HashMap<String, BufferedImage>().also {
+            for(chunk in chunks) it += chunk.importIcons(chunk.transparentIconsPath)
+        }
+    }
+
+    inner class Chunk(private val itemStacks: List<ItemStack>, index: Int) {
+        internal val iconsPath = exportDir.resolve("icons_$index.png")
+        internal val labelIconsPath = exportDir.resolve("label_icons_$index.png")
+        internal val transparentIconsPath = exportDir.resolve("transparent_icons_$index.png")
+        private val iconsStride = ceil(sqrt(itemStacks.size.toDouble())).toInt()
+        internal val size = itemStacks.size
+
+        internal fun exportIcons(r: Float, g: Float, b: Float, path: Path) {
+            val width = iconsStride * 34
+            val height = iconsStride * 34
+            val scaledWidth = iconsStride * 17
+
+            val nativeImage = renderToTexture(width, height, r, g, b, 2.0) {
+                var x = 0
+                var y = 0
+                for(itemStack in itemStacks) {
+                    itemRenderer.renderInGui(itemStack, x, y)
+                    itemRenderer.renderGuiItemOverlay(textRenderer, itemStack, x, y)
+
+                    x += 17
+                    if(x >= scaledWidth) {
+                        x = 0
+                        y += 17
+                    }
+                }
+            }
+
+            nativeImage.use { it.writeTo(path.toFile()) }
+        }
+
+        internal fun getPixels(): IntArray {
             val iconsImage = ImageIO.read(iconsPath.toFile()).asARGB()
 
-            val iconsStride = iconsStrides[chunkIndex]
-            for((index, itemStack) in chunkedItemStacks[chunkIndex].withIndex()) {
+            return IntArray(iconsImage.width * iconsImage.height).apply {
+                for(x in 0 until iconsImage.width) {
+                    for(y in 0 until iconsImage.height) {
+                        this[x * y] = iconsImage.getRGB(x, y)
+                    }
+                }
+            }
+        }
+
+        internal fun importIcons(path: Path): Map<String, BufferedImage> {
+            val iconsImage = ImageIO.read(path.toFile()).asARGB()
+
+            return itemStacks.mapIndexed { index, itemStack ->
                 val x = (index % iconsStride) * 34
                 val y = (index / iconsStride) * 34
 
@@ -109,66 +161,9 @@ class ItemIconsExtractor(
                     raster.setRect(0, 0, iconsImage.getData(x, y, width, height))
                 }
 
-                icons[itemStack.uniqueKey] = image
-            }
+                itemStack.uniqueKey to image
+            }.toMap()
         }
-
-        return icons
-    }
-
-    fun exportIcons(client: MinecraftClient) {
-        client.sendMessage("Generating icons")
-        var iconsCount = 0
-        for((index, chunk) in chunkedItemStacks.withIndex()) {
-            val iconsPath = exportDir.resolve("icons_$index.png")
-            val iconsStride = ceil(sqrt(chunk.size.toDouble())).toInt()
-            exportIcons(0.5451f, 0.5451f, 0.5451f, iconsStride, chunk, iconsPath)
-            iconsPaths.add(iconsPath)
-            iconsStrides.add(iconsStride)
-            iconsCount += chunk.size
-            client.sendMessage("Generated $iconsCount icons")
-        }
-
-        client.sendMessage("Generating label icons")
-        var labelIconsCount = 0
-        for((index, chunk) in chunkedItemStacks.withIndex()) {
-            val labelIconsPath = exportDir.resolve("label_icons_$index.png")
-            exportIcons(0.7765f, 0.7765f, 0.7765f, iconsStrides[index], chunk, labelIconsPath)
-            labelIconsPaths.add(labelIconsPath)
-            labelIconsCount += chunk.size
-            client.sendMessage("Generated $labelIconsCount label icons")
-        }
-
-        findIconsMaskColor()
-
-        client.sendMessage("Generating transparent icons")
-        var transparentIconsCount = 0
-        for((index, chunk) in chunkedItemStacks.withIndex()) {
-            val transparentIconsPath = exportDir.resolve("transparent_icons_$index.png")
-            exportIcons(
-                maskColorRed / 255.0f,
-                maskColorGreen / 255.0f,
-                maskColorBlue / 255.0f,
-                iconsStrides[index],
-                chunk,
-                transparentIconsPath
-            )
-            transparentIconsPaths.add(transparentIconsPath)
-            transparentIconsCount += chunk.size
-            client.sendMessage("Generated $transparentIconsCount transparent icons")
-        }
-    }
-
-    fun importIcons() {
-        slotIcons = importIcons(iconsPaths)
-        labelIcons = importIcons(labelIconsPaths)
-
-        for(transparentIconPath in transparentIconsPaths) {
-            val unmaskedIconsImage = ImageIO.read(transparentIconPath.toFile()).asARGB()
-            applyMaskColor(unmaskedIconsImage)
-            ImageIO.write(unmaskedIconsImage, "PNG", transparentIconPath.toFile())
-        }
-        transparentIcons = importIcons(transparentIconsPaths)
     }
 
     companion object {

@@ -1,5 +1,6 @@
 package net.bloople.recipeimagesexporter
 
+import net.bloople.recipeimagesexporter.RecipeImagesExporterMod.LOGGER
 import net.minecraft.client.MinecraftClient
 import net.minecraft.util.Util
 import java.awt.image.BufferedImage
