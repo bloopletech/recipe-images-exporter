@@ -144,8 +144,14 @@ fun convertStonecuttingRecipe(recipe: StonecuttingRecipe): List<StonecuttingReci
 fun convertSmithingRecipe(recipe: SmithingRecipe): List<SmithingRecipeInfo> {
     val recipePath = "smithing/${recipe.id.namespace}/${recipe.id.path}"
 
-    val base = recipe.javaClass.getDeclaredField("base").get(recipe) as Ingredient
-    val addition = recipe.javaClass.getDeclaredField("addition").get(recipe) as Ingredient
+    val baseField = recipe.javaClass.getDeclaredField("field_25389") // base
+    val additionField = recipe.javaClass.getDeclaredField("field_25390") // addition
+
+    baseField.trySetAccessible()
+    additionField.trySetAccessible()
+
+    val base = baseField.get(recipe) as Ingredient // field_25389
+    val addition = additionField.get(recipe) as Ingredient // field_25390
 
     val maxStacksSize = arrayOf(base, addition).maxOf { it.matchingStacks.size }
 
