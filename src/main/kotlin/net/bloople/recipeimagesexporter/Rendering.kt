@@ -11,7 +11,7 @@ import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.util.ScreenshotRecorder
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
-import net.minecraft.util.math.Matrix4f
+import org.joml.Matrix4f
 
 
 fun renderToTexture(
@@ -42,11 +42,13 @@ fun renderToTexture(
         RenderSystem.viewport(0, 0, width, height)
 
         RenderSystem.clear(GlConst.GL_DEPTH_BUFFER_BIT, IS_SYSTEM_MAC)
-        val matrix4f = Matrix4f.projectionMatrix(
+        val matrix4f = Matrix4f()
+        // TODO: Fix rendering of items
+        matrix4f.ortho(
             0.0f,
             (width.toDouble() / scaleFactor).toFloat(),
-            0.0f,
             (height.toDouble() / scaleFactor).toFloat(),
+            0.0f,
             1000.0f,
             3000.0f
         )
@@ -58,7 +60,7 @@ fun renderToTexture(
         DiffuseLighting.enableGuiDepthLighting()
 
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
-        RenderSystem.setShader { GameRenderer.getPositionTexShader() }
+        RenderSystem.setShader { GameRenderer.getPositionColorTexProgram() }
         RenderSystem.setShaderTexture(0, ClickableWidget.WIDGETS_TEXTURE)
 
         RenderSystem.enableBlend()

@@ -1,5 +1,6 @@
 package net.bloople.recipeimagesexporter
 
+import net.bloople.recipeimagesexporter.mixins.SmithingRecipeAccessor
 import net.minecraft.item.ItemStack
 import net.minecraft.recipe.*
 
@@ -144,14 +145,10 @@ fun convertStonecuttingRecipe(recipe: StonecuttingRecipe): List<StonecuttingReci
 fun convertSmithingRecipe(recipe: SmithingRecipe): List<SmithingRecipeInfo> {
     val recipePath = "smithing/${recipe.id.namespace}/${recipe.id.path}"
 
-    val baseField = recipe.javaClass.getDeclaredField("field_25389") // base
-    val additionField = recipe.javaClass.getDeclaredField("field_25390") // addition
+    val recipeAccessor = recipe as SmithingRecipeAccessor
 
-    baseField.trySetAccessible()
-    additionField.trySetAccessible()
-
-    val base = baseField.get(recipe) as Ingredient // field_25389
-    val addition = additionField.get(recipe) as Ingredient // field_25390
+    val base = recipeAccessor.getBase() as Ingredient
+    val addition = recipeAccessor.getAddition() as Ingredient
 
     val maxStacksSize = arrayOf(base, addition).maxOf { it.matchingStacks.size }
 
