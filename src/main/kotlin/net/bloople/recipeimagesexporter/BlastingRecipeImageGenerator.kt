@@ -2,7 +2,7 @@ package net.bloople.recipeimagesexporter
 
 import net.minecraft.item.ItemStack
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
+import net.minecraft.registry.Registries
 import java.awt.image.BufferedImage
 import java.lang.Integer.max
 import javax.imageio.ImageIO
@@ -22,7 +22,7 @@ class BlastingRecipeImageGenerator(
 
             createGraphics().use {
                 drawImage(itemsData.slotImage(recipeInfo.slot), 11, 11, null)
-                val coalStack = ItemStack(Registry.ITEM.get(Identifier("coal")), 1)
+                val coalStack = ItemStack(Registries.ITEM.get(Identifier("coal")), 1)
                 drawImage(itemsData.slotImage(coalStack), 11, 83, null)
                 drawImage(itemsData.outputImage(recipeInfo.output), 130, 46, null)
 

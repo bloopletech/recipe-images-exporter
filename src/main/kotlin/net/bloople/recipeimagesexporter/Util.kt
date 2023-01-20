@@ -5,7 +5,7 @@ import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
-import net.minecraft.util.registry.Registry
+import net.minecraft.registry.Registries
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.awt.AlphaComposite
@@ -29,7 +29,7 @@ fun <T> Array<out T>.getOrLast(index: Int): T? {
     return if (index in 0..lastIndex) get(index) else get(lastIndex)
 }
 
-val Item.identifier: Identifier get() = Registry.ITEM.getId(this)
+val Item.identifier: Identifier get() = Registries.ITEM.getId(this)
 
 val Identifier.itemResourceLocation: Identifier get() = Identifier(namespace, "textures/item/$path.png")
 
